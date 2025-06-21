@@ -52,6 +52,11 @@ class ItemVariant extends Model
         return $this->belongsTo(WarnaAnyam::class);
     }
 
+    public function modelAnyam()
+    {
+        return $this->belongsTo(ModelAnyam::class);
+    }
+
     /**
      * Get the price of the item variant.
      *
@@ -62,5 +67,23 @@ class ItemVariant extends Model
         return number_format($this->harga, 0, ',', '.');
     }
 
+    protected $casts = [
+        'gambar_item' => 'array', // Assuming gambar_item is stored as a JSON array
+    ];
+
+    public function detailPenawaranPenjualan()
+    {
+        return $this->hasMany(DetailPenawaranPenjualan::class);
+    }
+
+    public function detailPesananPenjualan()
+    {
+        return $this->hasMany(DetailPesananPenjualan::class);
+    }
+
+    public function detailPengirimanPenjualan()
+    {
+        return $this->hasMany(DetailPengirimanPenjualan::class);
+    }
 
 }

@@ -20,4 +20,12 @@ class ItemCategories extends Model
     {
         return $this->hasMany(Item::class);
     }
+
+    /**
+     * Get the subcategories associated with the category.
+     */
+    public function subCategories()
+    {
+        return $this->hasMany(SubCategories::class, 'item_category_id');
+    }
 }

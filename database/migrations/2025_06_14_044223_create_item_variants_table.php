@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('item_id')->constrained('items')->onDelete('cascade');
             $table->string('nama_variant')->unique();
-            $table->string('gambar_item')->nullable();
+            $table->json('gambar_item')->nullable();
             $table->text('deskripsi_item')->nullable();
             $table->foreignId('jenis_kayu_id')
                   ->constrained('jenis_kayus')
@@ -31,6 +31,9 @@ return new class extends Migration
                   ->onDelete('cascade');
             $table->foreignId('warna_anyam_id')
                   ->constrained('warna_anyams')
+                  ->onDelete('cascade');
+            $table->foreignId('model_anyam_id')
+                  ->constrained('model_anyams')
                   ->onDelete('cascade');
             $table->float('harga')->default(0);
             $table->timestamps();

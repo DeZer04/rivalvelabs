@@ -22,6 +22,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
+use phpDocumentor\Reflection\DocBlock\Tags\See;
 
 class ItemResource extends Resource
 {
@@ -34,29 +35,79 @@ class ItemResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make()->schema([
+
                     // Kategori & Nama Item
-                    Grid::make(2)->schema([
-                        Select::make('item_category_id')
-                            ->label('Kategori')
-                            ->relationship('category', 'nama_item_category')
-                            ->createOptionForm([
-                                TextInput::make('nama_item_category')->required()->label('Nama Kategori'),
-                                Placeholder::make('existing_data')
-                                    ->label('Data Kategori yang Sudah Ada')
-                                    ->content(fn () => ItemCategories::pluck('nama_item_category')->implode(', '))
-                                    ->columnSpanFull(),
-                            ])
-                            ->required(),
+                    Grid::make([
+                        'default' => 5,
+                        'md' => 5,
+                    ])
+                        ->schema([
+                            Select::make('item_category_id')
+                                ->label('Kategori')
+                                ->relationship('category', 'nama_item_category') // model Item
+                                ->createOptionForm([
+                                    TextInput::make('nama_item_category')->label('Nama Kategori')->required(),
+                                ])
+                                ->required()
+                                ->searchable(),
 
-                        TextInput::make('nama_item')->label('Nama Item')->required(),
+                            Select::make('sub_category_id')
+                                ->label('Sub Kategori')
+                                ->relationship('subCategory', 'nama_sub_category')
+                                ->createOptionForm([
+                                    Select::make('item_category_id')
+                                        ->label('Kategori')
+                                        ->relationship('itemCategory', 'nama_item_category')
+                                        ->required(),
+
+                                    TextInput::make('nama_sub_category')
+                                        ->required()
+                                        ->label('Nama Sub Kategori'),
+                                ])
+                                ->searchable()
+                                ->reactive()
+                                ->required(),
+
+
+                            TextInput::make('nama_item')
+                                ->label('Nama Item')
+                                ->required()
+                                ->columnSpan(3),
                     ]),
 
-                    // Dimensi W x D x H
-                    Grid::make(3)->schema([
-                        TextInput::make('width')->numeric()->label('W'),
-                        TextInput::make('depth')->numeric()->label('D'),
-                        TextInput::make('height')->numeric()->label('H'),
-                    ]),
+                    // Master Gambar + Dimensi W/D/H di kanan atas
+                    Grid::make([
+                        'default' => 8,
+                        'md' => 8,
+                    ])
+                        ->schema([
+                            // Gambar item (kiri, 6/7)
+                            FileUpload::make('master_gambar_item')
+                                ->image()
+                                ->label('Gambar Utama Item')
+                                ->required()
+                                ->columnSpan(7),
+
+                            // Dimensi W/D/H (kanan, 1/7 - vertical stack)
+                            Grid::make(1)
+                                ->schema([
+                                    TextInput::make('width')
+                                        ->label('Width')
+                                        ->suffix(' cm')
+                                        ->numeric(),
+
+                                    TextInput::make('depth')
+                                        ->label('Depth')
+                                        ->suffix(' cm')
+                                        ->numeric(),
+
+                                    TextInput::make('height')
+                                        ->label('Height')
+                                        ->suffix(' cm')
+                                        ->numeric(),
+                                ])
+                                ->columnSpan(1),
+                        ]),
 
                     // Repeater Varian
                     Repeater::make('variants')
@@ -66,7 +117,9 @@ class ItemResource extends Resource
                             Grid::make(2)->schema([
                                 TextInput::make('nama_variant')->required()->label('Nama Varian'),
 
-                                FileUpload::make('gambar_item')->image(),
+                                FileUpload::make('gambar_item')
+                                    ->image()
+                                    ->multiple(),
 
                                 Textarea::make('deskripsi_item')->columnSpanFull(),
 
@@ -77,10 +130,6 @@ class ItemResource extends Resource
                                     ->createOptionModalHeading('Tambah Jenis Kayu Baru')
                                     ->createOptionForm([
                                         TextInput::make('nama_jenis_kayu')->required(),
-                                        Placeholder::make('existing_data')
-                                            ->label('Data Jenis Kayu yang Sudah Ada')
-                                            ->content(fn () => JenisKayu::pluck('nama_jenis_kayu')->implode(', '))
-                                            ->columnSpanFull(),
                                     ])
                                     ->required(),
 
@@ -94,10 +143,6 @@ class ItemResource extends Resource
                                             ->relationship('jenisKayu', 'nama_jenis_kayu')
                                             ->required(),
                                         TextInput::make('nama_grade_kayu')->required(),
-                                        Placeholder::make('existing_data')
-                                            ->label('Data Grade Kayu yang Sudah Ada')
-                                            ->content(fn () => GradeKayu::pluck('nama_grade_kayu')->implode(', '))
-                                            ->columnSpanFull(),
                                     ])
                                     ->required(),
 
@@ -111,11 +156,8 @@ class ItemResource extends Resource
                                             ->relationship('jenisKayu', 'nama_jenis_kayu')
                                             ->required(),
                                         TextInput::make('nama_finishing_kayu')->required(),
-                                        Placeholder::make('existing_data')
-                                            ->label('Data Finishing Kayu yang Sudah Ada')
-                                            ->content(fn () => FinishingKayu::pluck('nama_finishing_kayu')->implode(', '))
-                                            ->columnSpanFull(),
                                     ])
+                                    ->searchable()
                                     ->required(),
 
                                 // Jenis Anyam
@@ -125,10 +167,6 @@ class ItemResource extends Resource
                                     ->createOptionModalHeading('Tambah Jenis Anyam Baru')
                                     ->createOptionForm([
                                         TextInput::make('nama_jenis_anyam')->required(),
-                                        Placeholder::make('existing_data')
-                                            ->label('Data Jenis Anyam yang Sudah Ada')
-                                            ->content(fn () => JenisAnyam::pluck('nama_jenis_anyam')->implode(', '))
-                                            ->columnSpanFull(),
                                     ])
                                     ->required(),
 
@@ -142,10 +180,17 @@ class ItemResource extends Resource
                                             ->relationship('jenisAnyam', 'nama_jenis_anyam')
                                             ->required(),
                                         TextInput::make('nama_warna_anyam')->required(),
-                                        Placeholder::make('existing_data')
-                                            ->label('Data Warna Anyam yang Sudah Ada')
-                                            ->content(fn () => WarnaAnyam::pluck('nama_warna_anyam')->implode(', '))
-                                            ->columnSpanFull(),
+                                    ])
+                                    ->required(),
+
+                                // Model Anyam
+                                Select::make('model_anyam_id')
+                                    ->label('Model Anyam')
+                                    ->relationship('modelAnyam', 'nama_model_anyam')
+                                    ->createOptionModalHeading('Tambah Model Anyam Baru')
+                                    ->createOptionForm([
+                                        TextInput::make('nama_model_anyam')->required(),
+                                        FileUpload::make('gambar_model_anyam')->image(),
                                     ])
                                     ->required(),
 
@@ -158,7 +203,8 @@ class ItemResource extends Resource
                         ->reorderable()
                         ->collapsible()
                         ->itemLabel(fn (array $state): ?string => $state['nama_variant'] ?? null),
-                ]),
+
+                ])
             ]);
     }
 
