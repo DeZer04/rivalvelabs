@@ -2,38 +2,37 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\JenisKayuResource\Pages;
-use App\Filament\Resources\JenisKayuResource\RelationManagers;
-use App\Models\JenisKayu;
+use App\Filament\Resources\JenisAnyamResource\Pages;
+use App\Filament\Resources\JenisAnyamResource\RelationManagers;
+use App\Models\JenisAnyam;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\View\TablesRenderHook;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class JenisKayuResource extends Resource
+class JenisAnyamResource extends Resource
 {
-    protected static ?string $model = JenisKayu::class;
+    protected static ?string $model = JenisAnyam::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Master Kayu';
+    protected static ?string $navigationGroup = 'Master Anyam';
 
-    protected static ?string $navigationLabel = 'Jenis Kayu';
+    protected static ?string $navigationLabel = 'Jenis Anyam';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama_jenis_kayu')
-                    ->label('Nama Jenis Kayu')
+                Forms\Components\TextInput::make('nama_jenis_anyam')
+                    ->label('Nama Jenis Anyam')
                     ->required()
-                    ->unique(ignoreRecord: true)
-                    ->maxLength(255),
-            ])->columns([
-                'sm' => 1,
+                    ->maxLength(255)
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -41,8 +40,13 @@ class JenisKayuResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('nama_jenis_kayu')
-                    ->label('Nama Jenis Kayu')
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('nama_jenis_anyam')
+                    ->label('Nama Jenis Anyam')
                     ->sortable()
                     ->searchable(),
             ])
@@ -70,9 +74,9 @@ class JenisKayuResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListJenisKayus::route('/'),
-            'create' => Pages\CreateJenisKayu::route('/create'),
-            'edit' => Pages\EditJenisKayu::route('/{record}/edit'),
+            'index' => Pages\ListJenisAnyams::route('/'),
+            'create' => Pages\CreateJenisAnyam::route('/create'),
+            'edit' => Pages\EditJenisAnyam::route('/{record}/edit'),
         ];
     }
 }

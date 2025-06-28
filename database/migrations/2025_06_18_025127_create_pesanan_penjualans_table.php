@@ -18,10 +18,10 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->comment('Foreign key to buyers table');
             $table->foreignId('penawaran_penjualan_id')
+                ->nullable()
                 ->constrained('penawaran_penjualans')
                 ->onDelete('cascade')
-                ->comment('Optional foreign key to penawaran_penjualans table, can be null if not associated with a penawaran')
-                ->nullable();
+                ->comment('Optional foreign key to penawaran_penjualans table, can be null if not associated with a penawaran');
             $table->string('nomor_pesanan')
                 ->unique()
                 ->comment('Nomor pesanan yang unik untuk setiap pesanan');

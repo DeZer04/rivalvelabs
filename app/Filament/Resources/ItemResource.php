@@ -48,8 +48,7 @@ class ItemResource extends Resource
                                 ->createOptionForm([
                                     TextInput::make('nama_item_category')->label('Nama Kategori')->required(),
                                 ])
-                                ->required()
-                                ->searchable(),
+                                ->required(),
 
                             Select::make('sub_category_id')
                                 ->label('Sub Kategori')
@@ -64,7 +63,6 @@ class ItemResource extends Resource
                                         ->required()
                                         ->label('Nama Sub Kategori'),
                                 ])
-                                ->searchable()
                                 ->reactive()
                                 ->required(),
 
@@ -105,6 +103,12 @@ class ItemResource extends Resource
                                         ->label('Height')
                                         ->suffix(' cm')
                                         ->numeric(),
+
+                                    TextInput::make('seat_height')
+                                        ->label('Seat Height')
+                                        ->suffix(' cm')
+                                        ->numeric(),
+
                                 ])
                                 ->columnSpan(1),
                         ]),
@@ -212,13 +216,19 @@ class ItemResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('nama_item')->searchable()->sortable(),
+                Tables\Columns\ImageColumn::make('master_gambar_item')
+                    ->label('Gambar Utama')
+                    ->size(100)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('nama_item')->searchable(isIndividual: true)->sortable(),
                 Tables\Columns\TextColumn::make('category.nama_item_category')->label('Kategori'),
+                Tables\Columns\TextColumn::make('subCategory.nama_sub_category')->label('Sub Kategori'),
                 Tables\Columns\TextColumn::make('variants.nama_variant')->label('Varian'),
             ])
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

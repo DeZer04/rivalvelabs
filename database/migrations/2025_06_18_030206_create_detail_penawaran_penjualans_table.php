@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('item_variant_id')
                 ->nullable()
                 ->constrained('item_variants')
-                ->onDelete('set null')
+                ->onDelete('cascade')
                 ->comment('Foreign key to item_variants table, nullable if no variant is selected');
             $table->integer('jumlah_item')
                 ->comment('Jumlah item dalam penawaran');

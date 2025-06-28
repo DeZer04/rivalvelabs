@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\FinishingKayuResource\Pages;
-use App\Filament\Resources\FinishingKayuResource\RelationManagers;
-use App\Models\FinishingKayu;
+use App\Filament\Resources\WarnaAnyamResource\Pages;
+use App\Filament\Resources\WarnaAnyamResource\RelationManagers;
+use App\Models\WarnaAnyam;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,31 +13,31 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class FinishingKayuResource extends Resource
+class WarnaAnyamResource extends Resource
 {
-    protected static ?string $model = FinishingKayu::class;
+    protected static ?string $model = WarnaAnyam::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Master Kayu';
+    protected static ?string $navigationGroup = 'Master Anyam';
 
-    protected static ?string $navigationLabel = 'Finishing Kayu';
+    protected static ?string $navigationLabel = 'Warna Anyam';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama_finishing_kayu')
-                    ->label('Nama Finishing Kayu')
+                Forms\Components\Select::make('jenis_anyam_id')
+                    ->label('Jenis Anyam')
+                    ->options(\App\Models\JenisAnyam::pluck('nama_jenis_anyam', 'id'))
+                    ->required(),
+
+                Forms\Components\TextInput::make('nama_warna_anyam')
+                    ->label('Nama Warna Anyam')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
-                Forms\Components\Select::make('jenis_kayu_id')
-                    ->label('Jenis Kayu')
-                    ->options(\App\Models\JenisKayu::pluck('nama_jenis_kayu', 'id'))
-                    ->required(),
-            ])->columns([
-                'sm' => 1,
+
             ]);
     }
 
@@ -45,12 +45,17 @@ class FinishingKayuResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('nama_finishing_kayu')
-                    ->label('Nama Finishing Kayu')
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('jenisAnyam.nama_jenis_anyam')
+                    ->label('Jenis Anyam')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('jenisKayu.nama_jenis_kayu')
-                    ->label('Jenis Kayu')
+                Tables\Columns\TextColumn::make('nama_warna_anyam')
+                    ->label('Nama Warna Anyam')
                     ->sortable()
                     ->searchable(),
             ])
@@ -78,9 +83,9 @@ class FinishingKayuResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListFinishingKayus::route('/'),
-            'create' => Pages\CreateFinishingKayu::route('/create'),
-            'edit' => Pages\EditFinishingKayu::route('/{record}/edit'),
+            'index' => Pages\ListWarnaAnyams::route('/'),
+            'create' => Pages\CreateWarnaAnyam::route('/create'),
+            'edit' => Pages\EditWarnaAnyam::route('/{record}/edit'),
         ];
     }
 }

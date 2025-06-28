@@ -24,6 +24,7 @@ return new class extends Migration
             $table->float('width')->nullable();
             $table->float('height')->nullable();
             $table->float('depth')->nullable();
+            $table->float('seat_height')->nullable();
             $table->timestamps();
         });
     }

@@ -26,6 +26,11 @@ return new class extends Migration
                 ->constrained('items')
                 ->onDelete('cascade')
                 ->comment('Foreign key to items table');
+            $table->foreignId('item_variant_id')
+                ->nullable()
+                ->constrained('item_variants')
+                ->onDelete('cascade')
+                ->comment('Referensi ke varian item (opsional jika item tidak memiliki varian)');
             $table->integer('jumlah_item')
                 ->comment('Jumlah item dalam pengiriman');
             $table->timestamps();

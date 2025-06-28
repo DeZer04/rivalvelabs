@@ -113,6 +113,13 @@ class PenawaranPenjualanResource extends Resource
                                     $set('harga_satuan', $variant->harga);
                                     $set('gambar_variant', $variant->gambar_item[0] ?? null);
                                 }
+                            })
+                            ->afterStateHydrated(function (callable $set, callable $get, $state) {
+                                $variant = \App\Models\ItemVariant::find($state);
+                                if ($variant) {
+                                    $set('harga_satuan', $variant->harga);
+                                    $set('gambar_variant', $variant->gambar_item[0] ?? null);
+                                }
                             }),
 
                         TextInput::make('harga_satuan')

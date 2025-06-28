@@ -21,6 +21,8 @@ class GradeKayuResource extends Resource
 
     protected static ?string $navigationGroup = 'Master Kayu';
 
+    protected static ?string $navigationLabel = 'Grade Kayu';
+
     public static function form(Form $form): Form
     {
         return $form

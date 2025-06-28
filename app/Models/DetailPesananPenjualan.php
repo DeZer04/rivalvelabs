@@ -12,6 +12,7 @@ class DetailPesananPenjualan extends Model
     protected $fillable = [
         'pesanan_penjualan_id',
         'item_id',
+        'item_variant_id',
         'jumlah_item',
         'jumlah_item_dikirim',
         'harga_satuan',
@@ -31,6 +32,6 @@ class DetailPesananPenjualan extends Model
 
     public function ItemVariant()
     {
-        return $this->belongsTo(ItemVariant::class, 'item_id');
+        return $this->belongsTo(ItemVariant::class);
     }
 }

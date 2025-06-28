@@ -36,6 +36,8 @@ return new class extends Migration
                   ->constrained('model_anyams')
                   ->onDelete('cascade');
             $table->float('harga')->default(0);
+            $table->float('nett_weight')->nullable();
+            $table->float('gross_weight')->nullable();
             $table->timestamps();
         });
     }

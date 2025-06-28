@@ -53,7 +53,7 @@ class PenawaranPenjualan extends Model
             ->whereDate('tanggal_penawaran', $tanggal)
             ->count() + 1;
 
-        return sprintf('RIV/%s/%s/%03d', $buyerCode, $tgl, $count);
+        return sprintf('RIV/INQ/%s/%s/%03d', $buyerCode, $tgl, $count);
     }
 
 }
