@@ -22,4 +22,5 @@
             <p class="text-sm mt-2 text-gray-600">{{ $this->barcode }}</p>
         </div>
     @endif
+
 </x-filament-panels::page>

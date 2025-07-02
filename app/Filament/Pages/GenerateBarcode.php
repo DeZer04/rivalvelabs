@@ -6,9 +6,13 @@ use Filament\Pages\Page;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms;
-use Filament\Forms\Components\{Select, Grid, Hidden, Card, Section, ViewField};
+use Filament\Forms\Components\{Select, Grid, Hidden, Card, Section, TextInput, ViewField};
 use Illuminate\Support\Str;
 use App\Models\{Buyer, PesananPenjualan, Item};
+use Filament\Actions\Action;
+use Illuminate\Support\Facades\Log;
+use Picqer\Barcode\BarcodeGeneratorPNG;
+use Torgodly\Html2Media\Actions\Html2MediaAction;
 
 class GenerateBarcode extends Page implements HasForms
 {
@@ -71,9 +75,16 @@ class GenerateBarcode extends Page implements HasForms
                             })
                             ->reactive(),
 
-                        ViewField::make('supplier')
-                            ->label('Pilih Supplier (A-Z)')
-                            ->view('components.supplier-selector')
+                        TextInput::make('supplier_line')
+                            ->label('Kode Supplier (A-Z)')
+                            ->placeholder('Masukkan kode supplier (A-Z)')
+                            ->maxLength(1)
+                            ->reactive(),
+
+                        TextInput::make('container_number')
+                            ->label('Nomor Kontainer')
+                            ->placeholder('Masukkan nomor kontainer')
+                            ->maxLength(3)
                             ->reactive(),
                     ]),
 
@@ -86,17 +97,49 @@ class GenerateBarcode extends Page implements HasForms
     public function generateBarcode()
     {
         $formData = $this->form->getState();
+        Log::info('Form Data:', $formData);
 
-        $kode = 'BR-' . strtoupper(\Str::random(6));
-        $this->barcode = $kode;
+        // Ambil data dari formData['formData'] jika ada
+        $data = $formData['formData'] ?? $formData;
 
-        $this->form->fill(array_merge($formData, [
-            'barcode' => $kode,
-        ]));
+        $itemVariantId = $data['item_variant_id'] ?? null;
+        $buyerId = $data['buyer_id'] ?? null;
+        $pesananId = $data['pesanan_id'] ?? null;
+        $supplierLine = $data['supplier_line'] ?? 'X'; // default 'X' jika tidak dipilih
+        $containerNumber = $data['container_number'] ?? null;
+
+        // Ambil item_id dari item_variant jika diperlukan
+        $itemId = null;
+        if ($itemVariantId) {
+            $detail = \App\Models\DetailPesananPenjualan::where('item_variant_id', $itemVariantId)->first();
+            $itemId = $detail?->item_id;
+        }
+
+        // Format angka agar sesuai digit (zero-padded)
+        $itemPart = str_pad($itemId ?? 0, 4, '0', STR_PAD_LEFT);
+        $buyerPart = str_pad($buyerId ?? 0, 2, '0', STR_PAD_LEFT);
+        $poPart = str_pad($pesananId ?? 0, 2, '0', STR_PAD_LEFT);
+        $linePart = strtoupper(substr($supplierLine ?? 'X', 0, 1)); // hanya 1 karakter
+        $containerPart = str_pad(preg_replace('/\D/', '', $containerNumber ?? 0), 3, '0', STR_PAD_LEFT);
+
+        $barcode = "{$itemPart}.{$buyerPart}.{$poPart}.{$linePart}.{$containerPart}";
+
+        $this->barcode = $barcode;
+
+        // Pastikan mengisi ke formData['formData'] jika struktur nested
+        if (isset($formData['formData'])) {
+            $formData['formData']['barcode'] = $barcode;
+            $this->form->fill($formData);
+        } else {
+            $this->form->fill(array_merge($data, [
+            'barcode' => $barcode,
+            ]));
+        }
     }
 
     public function getBarcode(): ?string
     {
         return $this->barcode;
     }
+
 }

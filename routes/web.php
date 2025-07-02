@@ -1,14 +1,13 @@
 <?php
 
+use App\Http\Controllers\BarcodeImageController;
 use Illuminate\Support\Facades\Route;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Filament\Pages\GenerateBarcode;
+use App\Http\Controllers\BarcodeController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-
-Route::get('/barcode/print/{code}', function ($code) {
-    $pdf = Pdf::loadView('print.barcode', ['code' => $code]);
-    return $pdf->stream("barcode-$code.pdf");
-})->name('barcode.print');
+Route::match(['get', 'post'], '/', [BarcodeController::class, 'create'])->name('barcode.create');
+Route::get('/barcode/image/{text}', [BarcodeController::class, 'image'])->name('barcode.image');
+Route::get('/barcode/pesanan/{buyer}', [BarcodeController::class, 'getPesanan']);
+Route::get('/barcode/item-variant/{pesanan}', [BarcodeController::class, 'getItemVariant']);
+Route::post('/barcode/generate', [BarcodeController::class, 'generate'])->name('barcode.generate');
+Route::post('/barcode/decode', [BarcodeController::class, 'decode'])->name('barcode.decode');
