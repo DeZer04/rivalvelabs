@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -166,14 +167,16 @@
             display: inline-block;
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .barcode-preview {
@@ -242,9 +245,12 @@
             body * {
                 visibility: hidden;
             }
-            #print-area, #print-area * {
+
+            #print-area,
+            #print-area * {
                 visibility: visible;
             }
+
             #print-area {
                 position: absolute;
                 left: 0;
@@ -281,16 +287,17 @@
         }
     </style>
 </head>
+
 <body>
     <div class="main-container">
         <!-- Generate Section (Left) -->
         <div class="container" style="margin-right: 10px;">
             <h2>Generate Barcode</h2>
 
-            @if($errors->any())
+            @if ($errors->any())
                 <div class="error-list">
                     <ul>
-                        @foreach($errors->all() as $e)
+                        @foreach ($errors->all() as $e)
                             <li>{{ $e }}</li>
                         @endforeach
                     </ul>
@@ -305,8 +312,9 @@
                     <label for="buyer_id">Buyer</label>
                     <select name="buyer_id" id="buyer_id" class="form-control" required>
                         <option value="">-- Select Buyer --</option>
-                        @foreach($buyers as $id => $nama)
-                        <option value="{{ $id }}" {{ old('buyer_id') == $id ? 'selected' : '' }}>{{ $nama }}</option>
+                        @foreach ($buyers as $id => $nama)
+                            <option value="{{ $id }}" {{ old('buyer_id') == $id ? 'selected' : '' }}>
+                                {{ $nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -337,30 +345,33 @@
                     <div class="form-group">
                         <label for="supplier_code">Supplier Code</label>
                         <input type="text" name="supplier_code" id="supplier_code" class="form-control"
-                           maxlength="1" required value="{{ old('supplier_code') }}"
-                           placeholder="A-Z" pattern="[A-Za-z]">
+                            maxlength="1" required value="{{ old('supplier_code') }}" placeholder="A-Z"
+                            pattern="[A-Za-z]">
                         <div class="error-message" id="supplier-error" style="display: none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        Must be a single letter (A-Z)
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            Must be a single letter (A-Z)
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="nomor_container">Container Number</label>
                         <input type="text" name="nomor_container" id="nomor_container" class="form-control"
-                           maxlength="3" required value="{{ old('nomor_container') }}"
-                           placeholder="3 characters">
+                            maxlength="3" required value="{{ old('nomor_container') }}" placeholder="3 characters">
                         <div class="error-message" id="container-error" style="display: none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        Must be exactly 3 characters
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            Must be exactly 3 characters
                         </div>
                     </div>
                 </div>
@@ -370,11 +381,11 @@
                 </button>
             </form>
 
-            @if(session('barcodeText'))
+            @if (session('barcodeText'))
                 <div class="barcode-preview" id="print-area">
                     <div class="barcode-container">
                         <img src="{{ route('barcode.image', ['text' => urlencode(session('barcodeText'))]) }}"
-                             alt="Barcode" style="max-width: 5cm; height: 1.2cm;">
+                            alt="Barcode" style="max-width: 5cm; height: 1.2cm;">
                         <div class="barcode-text">{{ session('barcodeText') }}</div>
                     </div>
                     <div class="actions">
@@ -400,7 +411,7 @@
                     <div class="form-group">
                         <label for="barcode_input">Enter Barcode</label>
                         <input type="text" name="barcode_input" id="barcode_input" class="form-control"
-                        placeholder="Enter barcode to decode" required>
+                            placeholder="Enter barcode to decode" required>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">
                         Decode Barcode
@@ -408,19 +419,20 @@
                 </form>
             </div>
 
-            @if(session('decodedData'))
+            @if (session('decodedData'))
                 <div class="barcode-preview" style="margin-top: 32px;">
                     <div style="background: var(--primary); padding: 18px 0; border-radius: 8px 8px 0 0;">
                         <h3 style="color: #fff; font-size: 20px; font-weight: 600; margin: 0;">
                             Decoded Barcode Information
                         </h3>
                     </div>
-                    @if(session('decodedData')['is_valid'])
+                    @if (session('decodedData')['is_valid'])
                         <div class="decoded-info" style="padding: 28px 24px 20px 24px;">
                             <div class="decoded-grid" style="grid-template-columns: 160px 1fr; gap: 18px;">
                                 <div>
                                     <div class="decoded-label">Original Barcode</div>
-                                    <div class="barcode-text" style="font-size: 15px; color: var(--text); margin-top: 2px;">
+                                    <div class="barcode-text"
+                                        style="font-size: 15px; color: var(--text); margin-top: 2px;">
                                         {{ session('decodedData')['original_barcode'] }}
                                     </div>
                                 </div>
@@ -430,7 +442,7 @@
                                         {{ session('decodedData')['variant']->nama_variant ?? 'Not found' }}
                                     </div>
                                 </div>
-                                @if(session('decodedData')['buyer'])
+                                @if (session('decodedData')['buyer'])
                                     <div>
                                         <div class="decoded-label">Buyer</div>
                                         <div style="font-size: 15px;">
@@ -440,8 +452,9 @@
                                     <div>
                                         <div class="decoded-label">Order</div>
                                         <div style="font-size: 15px;">
-                                            <span style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
-                                            @if(session('decodedData')['pesanan']->nomor_pesanan)
+                                            <span
+                                                style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
+                                            @if (session('decodedData')['pesanan']->nomor_pesanan)
                                                 <span style="color: var(--text-light); margin-left: 8px;">
                                                     {{ session('decodedData')['pesanan']->nomor_pesanan }}
                                                 </span>
@@ -453,7 +466,7 @@
                                     <div class="decoded-label">Supplier Code</div>
                                     <div style="font-family: monospace; font-size: 15px;">
                                         {{ session('decodedData')['supplier_code'] }}
-                                        @if(session('decodedData')['supplier'])
+                                        @if (session('decodedData')['supplier'])
                                             <span style="color: var(--text-light); margin-left: 8px;">
                                                 ({{ session('decodedData')['supplier']->nama_supplier }})
                                             </span>
@@ -474,14 +487,19 @@
                         </div>
                     @else
                         <div style="padding: 28px 24px;">
-                            <div class="error-message" style="display: flex; align-items: flex-start; background: #fef2f2; border-left: 4px solid var(--error); border-radius: 6px; padding: 16px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--error); margin-right: 12px;" viewBox="0 0 24 24">
+                            <div class="error-message"
+                                style="display: flex; align-items: flex-start; background: #fef2f2; border-left: 4px solid var(--error); border-radius: 6px; padding: 16px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" style="color: var(--error); margin-right: 12px;"
+                                    viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="12" y1="8" x2="12" y2="12"></line>
                                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                                 </svg>
                                 <div>
-                                    <div style="font-weight: 600; color: var(--error); font-size: 16px;">Invalid Barcode</div>
+                                    <div style="font-weight: 600; color: var(--error); font-size: 16px;">Invalid
+                                        Barcode</div>
                                     <div style="color: var(--error); font-size: 14px; margin-top: 4px;">
                                         {{ session('decodedData')['error'] ?? 'Could not decode barcode' }}
                                     </div>
@@ -495,6 +513,81 @@
     </div>
 
     <script>
+        function printBarcode() {
+            @if(session('barcodeText'))
+            const barcodeText = "{{ session('barcodeText') }}";
+            const printWindow = window.open('', '', 'width=1200,height=600');
+
+            printWindow.document.write(`
+                <html>
+                <head>
+                <title>Print Barcode</title>
+                <style>
+                    @page {
+                    size: 5cm 2cm;
+                    margin: 0;
+                    }
+                    body {
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100%;
+                    font-family: monospace;
+                    font-size: 14px;
+                    letter-spacing: 2px;
+                    }
+                    .barcode-text {
+                    text-align: center;
+                    padding: 5px 0;
+                    }
+                    .cutting-line {
+                    border-top: 1px dashed #000;
+                    margin: 2px 0;
+                    text-align: center;
+                    font-size: 8px;
+                    color: #999;
+                    width: 100%;
+                    }
+                </style>
+                </head>
+                <body>
+                <div class="barcode-text">${barcodeText}</div>
+                <div class="cutting-line"></div>
+                <div class="barcode-text">${barcodeText}</div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+            }, 300);
+            @else
+            alert('No barcode available to print');
+            @endif
+        }
+
+        function copyBarcodeText() {
+            @if (session('barcodeText'))
+                const barcodeText = "{{ session('barcodeText') }}";
+                navigator.clipboard.writeText(barcodeText).then(() => {
+                    const btn = document.querySelector('.btn-primary');
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                });
+            @else
+                alert('No barcode available to copy');
+            @endif
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const buyerSelect = document.getElementById('buyer_id');
             const pesananSelect = document.getElementById('pesanan_id');
@@ -587,7 +680,8 @@
                         itemVariantSelect.disabled = false;
                     })
                     .catch(error => {
-                        itemVariantSelect.innerHTML = '<option value="">Error loading variants</option>';
+                        itemVariantSelect.innerHTML =
+                        '<option value="">Error loading variants</option>';
                         console.error('Error:', error);
                     })
                     .finally(() => {
@@ -596,118 +690,40 @@
             });
 
             // Prevent form submission if validation fails
-            document.querySelector('form[action="{{ route('barcode.generate') }}"]').addEventListener('submit', function(e) {
-                let isValid = true;
+            document.querySelector('form[action="{{ route('barcode.generate') }}"]').addEventListener('submit',
+                function(e) {
+                    let isValid = true;
 
-                // Validate supplier code
-                if (!/^[A-Za-z]$/.test(supplierCode.value)) {
-                    supplierError.style.display = 'flex';
-                    isValid = false;
-                }
+                    // Validate supplier code
+                    if (!/^[A-Za-z]$/.test(supplierCode.value)) {
+                        supplierError.style.display = 'flex';
+                        isValid = false;
+                    }
 
-                // Validate container number
-                if (containerNumber.value.length !== 3) {
-                    containerError.style.display = 'flex';
-                    isValid = false;
-                }
+                    // Validate container number
+                    if (containerNumber.value.length !== 3) {
+                        containerError.style.display = 'flex';
+                        isValid = false;
+                    }
 
-                if (!isValid) {
-                    e.preventDefault();
-                    generateBtn.style.transform = 'translateX(0)';
-                    setTimeout(() => {
-                        generateBtn.style.transform = 'translateX(5px)';
+                    if (!isValid) {
+                        e.preventDefault();
+                        generateBtn.style.transform = 'translateX(0)';
                         setTimeout(() => {
-                            generateBtn.style.transform = 'translateX(-5px)';
+                            generateBtn.style.transform = 'translateX(5px)';
                             setTimeout(() => {
-                                generateBtn.style.transform = 'translateX(0)';
+                                generateBtn.style.transform = 'translateX(-5px)';
+                                setTimeout(() => {
+                                    generateBtn.style.transform = 'translateX(0)';
+                                }, 50);
                             }, 50);
                         }, 50);
-                    }, 50);
-                }
-            });
+                    }
+                });
 
-            @if(session('barcodeText'))
-                function printBarcode() {
-                    const barcodeText = "{{ session('barcodeText') }}";
-                    const printWindow = window.open('', '', 'width=1200,height=290');
 
-                    printWindow.document.write(`
-                        <html>
-                        <head>
-                            <title>Print Barcode</title>
-                            <style>
-                                @page {
-                                    size: 5cm 2cm;
-                                    margin: 0;
-                                }
-                                body {
-                                    margin: 0;
-                                    padding: 0;
-                                    display: flex;
-                                    flex-direction: column;
-                                    justify-content: center;
-                                    align-items: center;
-                                    width: 5cm;
-                                    height: 2cm;
-                                }
-                                img {
-                                    max-width: 4.8cm;
-                                    height: 1.2cm;
-                                    display: block;
-                                    margin: 0 auto;
-                                }
-                                .barcode-text {
-                                    font-family: monospace;
-                                    font-size: 10px;
-                                    margin-top: 2px;
-                                    text-align: center;
-                                    letter-spacing: 3px;
-                                    color: #333;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <img src="{{ route('barcode.image', ['text' => urlencode(session('barcodeText'))]) }}" alt="Barcode">
-                            <div class="barcode-text">${barcodeText}</div>
-                        </body>
-                        </html>
-                    `);
-                    printWindow.document.close();
-
-                    // Wait for the image to load before printing
-                    printWindow.onload = function() {
-                        const img = printWindow.document.querySelector('img');
-                        if (img.complete) {
-                            setTimeout(() => {
-                                printWindow.focus();
-                                printWindow.print();
-                                printWindow.close();
-                            }, 300);
-                        } else {
-                            img.onload = function() {
-                                setTimeout(() => {
-                                    printWindow.focus();
-                                    printWindow.print();
-                                    printWindow.close();
-                                }, 300);
-                            };
-                        }
-                    };
-                }
-
-                function copyBarcodeText() {
-                    const barcodeText = "{{ session('barcodeText') }}";
-                    navigator.clipboard.writeText(barcodeText).then(() => {
-                        const btn = document.querySelector('.btn-primary');
-                        const originalText = btn.textContent;
-                        btn.textContent = 'Copied!';
-                        setTimeout(() => {
-                            btn.textContent = originalText;
-                        }, 2000);
-                    });
-                }
-            @endif
         });
     </script>
 </body>
+
 </html>
