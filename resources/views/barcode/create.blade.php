@@ -307,6 +307,7 @@
             <!-- Generate Barcode Form -->
             <form method="POST" action="{{ route('barcode.generate') }}">
                 @csrf
+                <input type="hidden" name="nomor_pesanan" id="nomor_pesanan_hidden">
 
                 <div class="form-group">
                     <label for="buyer_id">Buyer</label>
@@ -384,8 +385,6 @@
             @if (session('barcodeText'))
                 <div class="barcode-preview" id="print-area">
                     <div class="barcode-container">
-                        <img src="{{ route('barcode.image', ['text' => urlencode(session('barcodeText'))]) }}"
-                            alt="Barcode" style="max-width: 5cm; height: 1.2cm;">
                         <div class="barcode-text">{{ session('barcodeText') }}</div>
                     </div>
                     <div class="actions">
@@ -514,62 +513,84 @@
 
     <script>
         function printBarcode() {
-            @if(session('barcodeText'))
-            const barcodeText = "{{ session('barcodeText') }}";
-            const printWindow = window.open('', '', 'width=1200,height=600');
+            const barcodeText = "{{ session('barcodeText') ?? '' }}";
+            if (!barcodeText) {
+                alert('No barcode text available to print');
+                return;
+            }
+
+            const printWindow = window.open('', '', 'width=800,height=500'); // Larger window
+
+            // Wider dimensions (approx 7.5cm width x 2cm height)
+            const labelWidth = 284; // ~7.5cm at 96dpi (original was 189px for 5cm)
+            const labelHeight = 76; // Same height (2cm)
+            const margin = 5;
+            const padding = 5;
 
             printWindow.document.write(`
-                <html>
-                <head>
-                <title>Print Barcode</title>
-                <style>
-                    @page {
-                    size: 5cm 2cm;
-                    margin: 0;
-                    }
-                    body {
-                    margin: 0;
+            <html>
+            <head>
+            <title>Print Barcode Text</title>
+            <style>
+                @page {
+                    size: ${labelWidth + margin*2}px ${labelHeight*2 + margin*3}px;
+                    margin: ${margin}px;
+                }
+                body {
+                    margin-bottom: 0;
+                    margin-left: 0;
+                    margin-right: 0;
+                    margin-top: 10px;
                     padding: 0;
+                    background-color: white;
+                }
+                .label-sheet {
                     display: flex;
                     flex-direction: column;
+                    gap: ${margin}px;
+                }
+                .label {
+                    width: ${labelWidth}px;
+                    height: ${labelHeight}px;
+                    border: 2px solid #000;
+                    display: flex;
                     justify-content: center;
                     align-items: center;
-                    height: 100%;
-                    font-family: monospace;
-                    font-size: 14px;
+                    page-break-inside: avoid;
+                    padding: ${padding}px;
+                    box-sizing: border-box;
+                    overflow: visible;
+                }
+                .barcode-text {
+                    font-family: consolas;
+                    font-size: 30px; /* Slightly larger font */
                     letter-spacing: 2px;
-                    }
-                    .barcode-text {
+                    white-space: nowrap;
                     text-align: center;
-                    padding: 5px 0;
-                    }
-                    .cutting-line {
-                    border-top: 1px dashed #000;
-                    margin: 2px 0;
-                    text-align: center;
-                    font-size: 8px;
-                    color: #999;
                     width: 100%;
-                    }
-                </style>
-                </head>
-                <body>
-                <div class="barcode-text">${barcodeText}</div>
-                <div class="cutting-line"></div>
-                <div class="barcode-text">${barcodeText}</div>
-                </body>
-                </html>
+                }
+            </style>
+            </head>
+            <body>
+                <div class="label-sheet">
+                    <div class="label">
+                        <div class="barcode-text">${barcodeText}</div>
+                    </div>
+                    <div class="label">
+                        <div class="barcode-text">${barcodeText}</div>
+                    </div>
+                </div>
+                <script>
+                    setTimeout(() => {
+                        window.focus();
+                        window.print();
+                        window.close();
+                    }, 300);
+                <\/script>
+            </body>
+            </html>
             `);
             printWindow.document.close();
-
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-                printWindow.close();
-            }, 300);
-            @else
-            alert('No barcode available to print');
-            @endif
         }
 
         function copyBarcodeText() {
@@ -599,6 +620,7 @@
             const supplierError = document.getElementById('supplier-error');
             const containerError = document.getElementById('container-error');
             const generateBtn = document.getElementById('generate-btn');
+            const nomorPesananHidden = document.getElementById('nomor_pesanan_hidden');
 
             // Form validation
             supplierCode.addEventListener('input', function() {
@@ -641,7 +663,7 @@
                     .then(data => {
                         let options = '<option value="">-- Select Order --</option>';
                         data.forEach(p => {
-                            options += `<option value="${p.id}">${p.nomor_pesanan}</option>`;
+                            options += `<option value="${p.id}" data-nomor="${p.nomor_pesanan}">${p.nomor_pesanan}</option>`;
                         });
                         pesananSelect.innerHTML = options;
                         pesananSelect.disabled = false;
@@ -656,8 +678,13 @@
             });
 
             pesananSelect.addEventListener('change', function() {
-                const pesananId = this.value;
-                if (!pesananId) {
+                const selectedOption = this.options[this.selectedIndex];
+                const nomorPesanan = selectedOption.text; // Get the displayed text (PO#62)
+
+                // Set hidden field with nomor_pesanan
+                nomorPesananHidden.value = nomorPesanan;
+
+                if (!selectedOption.value) {
                     itemVariantSelect.innerHTML = '<option value="">-- Select Item Variant --</option>';
                     return;
                 }
@@ -666,7 +693,8 @@
                 itemVariantSelect.disabled = true;
                 variantLoading.style.display = 'flex';
 
-                fetch(`/barcode/item-variant/${pesananId}`)
+                // Send the full order number (PO#62)
+                fetch(`/barcode/item-variant/${encodeURIComponent(nomorPesanan)}`)
                     .then(res => {
                         if (!res.ok) throw new Error('Failed to load variants');
                         return res.json();
@@ -680,8 +708,7 @@
                         itemVariantSelect.disabled = false;
                     })
                     .catch(error => {
-                        itemVariantSelect.innerHTML =
-                        '<option value="">Error loading variants</option>';
+                        itemVariantSelect.innerHTML = '<option value="">Error loading variants</option>';
                         console.error('Error:', error);
                     })
                     .finally(() => {
@@ -720,10 +747,7 @@
                         }, 50);
                     }
                 });
-
-
         });
     </script>
 </body>
-
 </html>
