@@ -139,7 +139,7 @@ class BarcodeController extends Controller
                 ->orWhere('kode_supplier', 'LIKE', "%" . $supplierCode . "%")
                 ->first();
             if (!$supplier) {
-                throw new \Exception('Supplier tidak ditemukan');
+                throw new \Exception('Production Line tidak ditemukan');
             }
 
             // Cari pesanan berdasarkan buyer dan nomor pesanan

@@ -530,8 +530,8 @@
 
                 <div class="input-group">
                     <div class="form-group">
-                        <label for="supplier_code">Supplier Code <span class="tooltip"><i class="fas fa-info-circle"></i>
-                                <span class="tooltiptext">Enter a single letter (A-Z) identifying the supplier</span>
+                        <label for="supplier_code">Production Line Code <span class="tooltip"><i class="fas fa-info-circle"></i>
+                                <span class="tooltiptext">Enter a single letter (A-Z) identifying the production line</span>
                             </span></label>
                         <input type="text" name="supplier_code" id="supplier_code" class="form-control"
                             maxlength="1" required value="{{ old('supplier_code') }}" placeholder="A-Z"
@@ -667,7 +667,7 @@
                                 </div>
                                 <!-- Row 4: Supplier Code (full width) -->
                                 <div style="grid-column: 1 / span 2;">
-                                    <div class="decoded-label">Supplier Code</div>
+                                    <div class="decoded-label">Production Line Code</div>
                                     <div style="font-family: monospace; font-size: 15px;">
                                         {{ session('decodedData')['supplier_code'] }}
                                         @if (session('decodedData')['supplier'])
@@ -676,7 +676,7 @@
                                             </span>
                                         @else
                                             <span style="color: var(--error); margin-left: 8px;">
-                                                (Supplier not found)
+                                                (Production Line not found)
                                             </span>
                                         @endif
                                     </div>
