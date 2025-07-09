@@ -287,7 +287,7 @@
 
         .decoded-grid {
             display: grid;
-            grid-template-columns: 140px 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 14px;
             margin-bottom: 14px;
         }
@@ -626,7 +626,15 @@
                     </div>
                     @if (session('decodedData')['is_valid'])
                         <div class="decoded-info" style="padding: 28px 24px 20px 24px;">
-                            <div class="decoded-grid">
+                            <div class="decoded-grid" style="grid-template-columns: 1fr 1fr;">
+                                <!-- Row 1: Item (variant) -->
+                                <div style="grid-column: 1 / span 2;">
+                                    <div class="decoded-label">Item Variant</div>
+                                    <div style="font-weight: 600; color: var(--primary); font-size: 15px;">
+                                        {{ session('decodedData')['variant']->nama_variant ?? 'Not found' }}
+                                    </div>
+                                </div>
+                                <!-- Row 2: Original Barcode | Buyer -->
                                 <div>
                                     <div class="decoded-label">Original Barcode</div>
                                     <div class="barcode-text" style="font-size: 15px; color: var(--text); margin-top: 2px;">
@@ -634,31 +642,31 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="decoded-label">Item Variant</div>
-                                    <div style="font-weight: 600; color: var(--primary); font-size: 15px;">
-                                        {{ session('decodedData')['variant']->nama_variant ?? 'Not found' }}
+                                    <div class="decoded-label">Buyer</div>
+                                    <div style="font-size: 15px;">
+                                        {{ session('decodedData')['buyer']->nama_buyer ?? '-' }}
                                     </div>
                                 </div>
-                                @if (session('decodedData')['buyer'])
-                                    <div>
-                                        <div class="decoded-label">Buyer</div>
-                                        <div style="font-size: 15px;">
-                                            {{ session('decodedData')['buyer']->nama_buyer }}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="decoded-label">Order</div>
-                                        <div style="font-size: 15px;">
-                                            <span style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
-                                            @if (session('decodedData')['pesanan']->nomor_pesanan)
-                                                <span style="color: var(--text-light); margin-left: 8px;">
-                                                    {{ session('decodedData')['pesanan']->nomor_pesanan }}
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endif
+                                <!-- Row 3: Order | Container -->
                                 <div>
+                                    <div class="decoded-label">Order</div>
+                                    <div style="font-size: 15px;">
+                                        <span style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
+                                        @if (session('decodedData')['pesanan']->nomor_pesanan)
+                                            <span style="color: var(--text-light); margin-left: 8px;">
+                                                {{ session('decodedData')['pesanan']->nomor_pesanan }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="decoded-label">Container Number</div>
+                                    <div style="font-family: monospace; font-weight: 600; font-size: 15px;">
+                                        {{ session('decodedData')['container_number'] }}
+                                    </div>
+                                </div>
+                                <!-- Row 4: Supplier Code (full width) -->
+                                <div style="grid-column: 1 / span 2;">
                                     <div class="decoded-label">Supplier Code</div>
                                     <div style="font-family: monospace; font-size: 15px;">
                                         {{ session('decodedData')['supplier_code'] }}
@@ -671,12 +679,6 @@
                                                 (Supplier not found)
                                             </span>
                                         @endif
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="decoded-label">Container Number</div>
-                                    <div style="font-family: monospace; font-weight: 600; font-size: 15px;">
-                                        {{ session('decodedData')['container_number'] }}
                                     </div>
                                 </div>
                             </div>
