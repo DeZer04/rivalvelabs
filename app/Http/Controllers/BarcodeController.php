@@ -19,26 +19,6 @@ class BarcodeController extends Controller
         return view('barcode.create', compact('buyers'));
     }
 
-    protected function getOrderSequenceNumber($buyerId, $nomorPesanan)
-    {
-        // Ambil angka dari nomor pesanan (PO#62 -> 62)
-        $pesananNumber = $this->extractNumberFromNomorPesanan($nomorPesanan);
-
-        // Get all orders for this buyer ordered by creation date
-        $orders = PesananPenjualan::where('buyer_id', $buyerId)
-            ->orderBy('created_at')
-            ->get()
-            ->map(function ($order) {
-                return $this->extractNumberFromNomorPesanan($order->nomor_pesanan);
-            })
-            ->toArray();
-
-        // Find the position of the current order in the sequence
-        $sequence = array_search($pesananNumber, $orders) + 1;
-
-        return $sequence;
-    }
-
     protected function extractNumberFromNomorPesanan($nomorPesanan)
     {
         // Extract number from PO#62 format
@@ -107,53 +87,49 @@ class BarcodeController extends Controller
     {
         try {
             // Validasi panjang barcode minimal
-            if (strlen($barcode) < 11) {
+            if (strlen($barcode) < 13) {
                 throw new \Exception('Barcode terlalu pendek');
             }
 
-            // Extract components from barcode based on your format
-            $variantId = (int) substr($barcode, 0, 4);
-            $buyerId = (int) substr($barcode, 4, 2);
-            $pesananCode = (int) substr($barcode, 6, 3); // 3 digit nomor pesanan
-            $supplierCode = substr($barcode, 9, 1);
-            $containerNumber = substr($barcode, 10, 3); // Ambil maksimal 3 karakter untuk nomor container
+            // Decode barcode
+            $variantId = (int) substr($barcode, 0, 4);    // 0001
+            $buyerId = (int) substr($barcode, 4, 2);       // 05
+            $pesananCode = substr($barcode, 6, 3);         // 001 → dicocokkan ke PO#001
+            $supplierCode = substr($barcode, 9, 1);        // X
+            $containerNumber = substr($barcode, 10, 3);    // 01A
 
-            // Validasi data numerik
-            if ($variantId <= 0 || $buyerId <= 0 || $pesananCode <= 0) {
+            if ($variantId <= 0 || $buyerId <= 0 || intval($pesananCode) <= 0) {
                 throw new \Exception('Format numerik tidak valid');
             }
 
-            // Fetch related models dengan error handling
+            // Ambil data variant dan buyer
             $variant = ItemVariant::find($variantId);
-            if (!$variant) {
-                throw new \Exception('Item variant tidak ditemukan');
-            }
+            if (!$variant) throw new \Exception('Item variant tidak ditemukan');
 
             $buyer = Buyer::find($buyerId);
-            if (!$buyer) {
-                throw new \Exception('Buyer tidak ditemukan');
-            }
+            if (!$buyer) throw new \Exception('Buyer tidak ditemukan');
 
-            // Cari supplier dengan kode yang sesuai
-            $supplier = Supplier::where('kode_supplier', 'LIKE', '%"' . $supplierCode . '"%')
-                ->orWhere('kode_supplier', 'LIKE', "%" . $supplierCode . "%")
-                ->first();
-            if (!$supplier) {
-                throw new \Exception('Production Line tidak ditemukan');
-            }
+            // Supplier lookup
+            $supplier = Supplier::where('kode_supplier', 'LIKE', '%' . $supplierCode . '%')->first();
+            if (!$supplier) throw new \Exception('Production Line tidak ditemukan');
 
-            // Cari pesanan berdasarkan buyer dan nomor pesanan
-            $pesanan = PesananPenjualan::where('buyer_id', $buyerId)
-                        ->where('nomor_pesanan', 'LIKE', 'PO#' . $pesananCode . '%')
-                        ->first();
-            if (!$pesanan) {
+            // Cari semua pesanan dari buyer yang cocok dengan nomor pesanan
+            $pesananList = PesananPenjualan::where('buyer_id', $buyerId)
+                ->where('nomor_pesanan', 'LIKE', 'PO#' . $pesananCode . '%')
+                ->get();
+
+            if ($pesananList->isEmpty()) {
                 throw new \Exception('Pesanan tidak ditemukan');
+            } elseif ($pesananList->count() > 1) {
+                throw new \Exception('Lebih dari satu pesanan ditemukan untuk buyer dan nomor tersebut');
             }
 
-            // Verifikasi bahwa item variant ada di pesanan tersebut
+            $pesanan = $pesananList->first();
+
+            // Cek apakah variant ini ada di pesanan
             $itemInOrder = DetailPesananPenjualan::where('pesanan_penjualan_id', $pesanan->id)
-                            ->where('item_variant_id', $variantId)
-                            ->exists();
+                ->where('item_variant_id', $variantId)
+                ->exists();
             if (!$itemInOrder) {
                 throw new \Exception('Item tidak ditemukan dalam pesanan');
             }
@@ -163,7 +139,7 @@ class BarcodeController extends Controller
                 'buyer' => $buyer,
                 'pesanan' => $pesanan,
                 'supplier' => $supplier,
-                'pesanan_code' => $pesananCode,
+                'pesanan_code' => $pesanan->nomor_pesanan,
                 'order_sequence' => $pesananCode,
                 'supplier_code' => $supplierCode,
                 'container_number' => $containerNumber,
@@ -187,6 +163,7 @@ class BarcodeController extends Controller
             ];
         }
     }
+
 
     public function decode(Request $request)
     {
