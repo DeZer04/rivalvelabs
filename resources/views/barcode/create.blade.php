@@ -4,20 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generate Barcode</title>
+    <title>Barcode Generator & Decoder</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #e0e7ff;
             --success: #10b981;
             --success-hover: #059669;
             --error: #ef4444;
+            --warning: #f59e0b;
             --text: #1f2937;
             --text-light: #6b7280;
             --border: #e5e7eb;
+            --border-dark: #d1d5db;
             --bg: #f9fafb;
             --card-bg: #ffffff;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 10px;
+            --transition: all 0.2s ease;
         }
 
         * {
@@ -36,29 +43,49 @@
 
         .main-container {
             display: flex;
-            gap: 20px;
-            max-width: 1200px;
+            gap: 24px;
+            max-width: 1280px;
             margin: 0 auto;
         }
 
         .container {
             flex: 1;
             background-color: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
             padding: 32px;
+            transition: var(--transition);
+        }
+
+        .container:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         h2 {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             font-weight: 600;
             color: var(--text);
             font-size: 24px;
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+            position: relative;
         }
 
         label {
@@ -71,18 +98,18 @@
 
         .form-control {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: var(--transition);
             background-color: var(--card-bg);
         }
 
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         select.form-control {
@@ -94,14 +121,17 @@
         }
 
         .btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             padding: 12px 20px;
             font-size: 14px;
             font-weight: 500;
             text-align: center;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
+            transition: var(--transition);
             border: none;
             user-select: none;
         }
@@ -113,10 +143,11 @@
 
         .btn-primary:hover {
             background-color: var(--primary-hover);
+            transform: translateY(-1px);
         }
 
         .btn-primary:active {
-            transform: translateY(1px);
+            transform: translateY(0);
         }
 
         .btn-success {
@@ -126,6 +157,17 @@
 
         .btn-success:hover {
             background-color: var(--success-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e67e22;
+            transform: translateY(-1px);
         }
 
         .btn-block {
@@ -182,25 +224,37 @@
         .barcode-preview {
             margin-top: 40px;
             padding: 24px;
-            border-radius: 8px;
+            border-radius: var(--radius);
             background-color: var(--bg);
             text-align: center;
+            border: 1px dashed var(--border-dark);
+            transition: var(--transition);
+        }
+
+        .barcode-preview:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
         }
 
         .barcode-container {
             display: inline-block;
             padding: 16px;
             background-color: white;
-            border-radius: 8px;
+            border-radius: var(--radius);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
         }
 
         .barcode-text {
-            font-family: monospace;
-            font-size: 12px;
+            font-family: 'consolas', monospace;
+            font-size: 42px;
             letter-spacing: 2px;
-            margin-top: 8px;
-            color: var(--text-light);
+            margin: 8px 0;
+            color: var(--text);
+            font-weight: 400;
+            padding: 10px 20px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
         }
 
         .actions {
@@ -226,19 +280,84 @@
         .decoded-info {
             background-color: var(--card-bg);
             padding: 16px;
-            border-radius: 8px;
+            border-radius: var(--radius);
             margin-top: 16px;
+            border: 1px solid var(--border);
         }
 
         .decoded-grid {
             display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 12px;
-            margin-bottom: 12px;
+            grid-template-columns: 140px 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
         }
 
         .decoded-label {
             font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .card-header {
+            background: var(--primary);
+            padding: 18px 24px;
+            border-radius: var(--radius) var(--radius) 0 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header i {
+            font-size: 20px;
+        }
+
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 6px;
+            cursor: pointer;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--text);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .input-icon:hover {
+            color: var(--primary);
         }
 
         @media print {
@@ -268,7 +387,7 @@
 
         @media (max-width: 640px) {
             .container {
-                padding: 20px;
+                padding: 24px;
             }
 
             .input-group {
@@ -285,14 +404,75 @@
                 gap: 8px;
             }
         }
+
+        /* Animation for form errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Floating label effect */
+        .floating-label-group {
+            position: relative;
+            margin-bottom: 22px;
+        }
+
+        .floating-label {
+            position: absolute;
+            pointer-events: none;
+            left: 12px;
+            top: 12px;
+            transition: var(--transition);
+            padding: 0 4px;
+            background: var(--card-bg);
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .form-control:focus ~ .floating-label,
+        .form-control:not(:placeholder-shown) ~ .floating-label {
+            top: -10px;
+            left: 10px;
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* Barcode scanner animation */
+        .scanner-animation {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scanner-animation::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.8), transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128+Text&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div class="main-container">
         <!-- Generate Section (Left) -->
         <div class="container" style="margin-right: 10px;">
-            <h2>Generate Barcode</h2>
+            <h2><i class="fas fa-barcode"></i> Generate Barcode</h2>
 
             @if ($errors->any())
                 <div class="error-list">
@@ -305,12 +485,14 @@
             @endif
 
             <!-- Generate Barcode Form -->
-            <form method="POST" action="{{ route('barcode.generate') }}">
+            <form method="POST" action="{{ route('barcode.generate') }}" id="generate-form">
                 @csrf
                 <input type="hidden" name="nomor_pesanan" id="nomor_pesanan_hidden">
 
                 <div class="form-group">
-                    <label for="buyer_id">Buyer</label>
+                    <label for="buyer_id">Buyer <span class="tooltip"><i class="fas fa-info-circle"></i>
+                            <span class="tooltiptext">Select the buyer associated with this order</span>
+                        </span></label>
                     <select name="buyer_id" id="buyer_id" class="form-control" required>
                         <option value="">-- Select Buyer --</option>
                         @foreach ($buyers as $id => $nama)
@@ -321,22 +503,26 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="pesanan_id">Order</label>
+                    <label for="pesanan_id">Order <span class="tooltip"><i class="fas fa-info-circle"></i>
+                            <span class="tooltiptext">Select the specific order for this barcode</span>
+                        </span></label>
                     <select name="pesanan_id" id="pesanan_id" class="form-control" required>
                         <option value="">-- Select Order --</option>
                     </select>
-                    <div id="pesanan-loading" class="error-message" style="display: none;">
+                    <div id="pesanan-loading" class="error-message" style="display: none; color: var(--primary);">
                         <svg class="loading" style="border-top-color: var(--primary);"></svg>
                         Loading orders...
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="item_variant_id">Item Variant</label>
+                    <label for="item_variant_id">Item Variant <span class="tooltip"><i class="fas fa-info-circle"></i>
+                            <span class="tooltiptext">Select the specific item variant for this barcode</span>
+                        </span></label>
                     <select name="item_variant_id" id="item_variant_id" class="form-control" required>
                         <option value="">-- Select Item Variant --</option>
                     </select>
-                    <div id="variant-loading" class="error-message" style="display: none;">
+                    <div id="variant-loading" class="error-message" style="display: none; color: var(--primary);">
                         <svg class="loading" style="border-top-color: var(--primary);"></svg>
                         Loading variants...
                     </div>
@@ -344,10 +530,13 @@
 
                 <div class="input-group">
                     <div class="form-group">
-                        <label for="supplier_code">Supplier Code</label>
+                        <label for="supplier_code">Supplier Code <span class="tooltip"><i class="fas fa-info-circle"></i>
+                                <span class="tooltiptext">Enter a single letter (A-Z) identifying the supplier</span>
+                            </span></label>
                         <input type="text" name="supplier_code" id="supplier_code" class="form-control"
                             maxlength="1" required value="{{ old('supplier_code') }}" placeholder="A-Z"
                             pattern="[A-Za-z]">
+                        <i class="fas fa-keyboard input-icon" onclick="focusAndOpenKeyboard('supplier_code')"></i>
                         <div class="error-message" id="supplier-error" style="display: none;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -361,9 +550,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="nomor_container">Container Number</label>
+                        <label for="nomor_container">Container Number <span class="tooltip"><i class="fas fa-info-circle"></i>
+                                <span class="tooltiptext">Enter a 3-character container identifier</span>
+                            </span></label>
                         <input type="text" name="nomor_container" id="nomor_container" class="form-control"
                             maxlength="3" required value="{{ old('nomor_container') }}" placeholder="3 characters">
+                        <i class="fas fa-keyboard input-icon" onclick="focusAndOpenKeyboard('nomor_container')"></i>
                         <div class="error-message" id="container-error" style="display: none;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -378,7 +570,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" id="generate-btn">
-                    Generate Barcode
+                    <i class="fas fa-barcode"></i> Generate Barcode
                 </button>
             </form>
 
@@ -389,10 +581,13 @@
                     </div>
                     <div class="actions">
                         <button class="btn btn-success" onclick="printBarcode()">
-                            Print Barcode (5x2cm)
+                            <i class="fas fa-print"></i> Print Barcode
                         </button>
-                        <button class="btn btn-primary" onclick="copyBarcodeText()">
-                            Copy Barcode Text
+                        <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
+                            <i class="far fa-copy"></i> Copy Text
+                        </button>
+                        <button class="btn btn-warning" onclick="generateNewBarcode()">
+                            <i class="fas fa-sync-alt"></i> New Barcode
                         </button>
                     </div>
                 </div>
@@ -401,37 +596,40 @@
 
         <!-- Decode Section (Right) -->
         <div class="container" style="margin-left: 10px;">
-            <h2>Decode Barcode</h2>
+            <h2><i class="fas fa-search"></i> Decode Barcode</h2>
 
             <!-- Reverse Search Section (Separate Form) -->
             <div class="reverse-search-section">
-                <form method="POST" action="{{ route('barcode.decode') }}">
+                <form method="POST" action="{{ route('barcode.decode') }}" id="decode-form">
                     @csrf
                     <div class="form-group">
-                        <label for="barcode_input">Enter Barcode</label>
-                        <input type="text" name="barcode_input" id="barcode_input" class="form-control"
-                            placeholder="Enter barcode to decode" required>
+                        <label for="barcode_input">Enter Barcode <span class="tooltip"><i class="fas fa-info-circle"></i>
+                                <span class="tooltiptext">Paste or scan a barcode to decode its information</span>
+                            </span></label>
+                        <div class="scanner-animation">
+                            <input type="text" name="barcode_input" id="barcode_input" class="form-control"
+                                placeholder="Enter barcode to decode" required>
+                        </div>
+                        <i class="fas fa-barcode input-icon" onclick="startBarcodeScanner()"></i>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">
-                        Decode Barcode
+                        <i class="fas fa-search"></i> Decode Barcode
                     </button>
                 </form>
             </div>
 
             @if (session('decodedData'))
                 <div class="barcode-preview" style="margin-top: 32px;">
-                    <div style="background: var(--primary); padding: 18px 0; border-radius: 8px 8px 0 0;">
-                        <h3 style="color: #fff; font-size: 20px; font-weight: 600; margin: 0;">
-                            Decoded Barcode Information
-                        </h3>
+                    <div class="card-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Decoded Barcode Information</h3>
                     </div>
                     @if (session('decodedData')['is_valid'])
                         <div class="decoded-info" style="padding: 28px 24px 20px 24px;">
-                            <div class="decoded-grid" style="grid-template-columns: 160px 1fr; gap: 18px;">
+                            <div class="decoded-grid">
                                 <div>
                                     <div class="decoded-label">Original Barcode</div>
-                                    <div class="barcode-text"
-                                        style="font-size: 15px; color: var(--text); margin-top: 2px;">
+                                    <div class="barcode-text" style="font-size: 15px; color: var(--text); margin-top: 2px;">
                                         {{ session('decodedData')['original_barcode'] }}
                                     </div>
                                 </div>
@@ -451,8 +649,7 @@
                                     <div>
                                         <div class="decoded-label">Order</div>
                                         <div style="font-size: 15px;">
-                                            <span
-                                                style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
+                                            <span style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
                                             @if (session('decodedData')['pesanan']->nomor_pesanan)
                                                 <span style="color: var(--text-light); margin-left: 8px;">
                                                     {{ session('decodedData')['pesanan']->nomor_pesanan }}
@@ -515,14 +712,14 @@
         function printBarcode() {
             const barcodeText = "{{ session('barcodeText') ?? '' }}";
             if (!barcodeText) {
-                alert('No barcode text available to print');
+                showAlert('error', 'No barcode available to print');
                 return;
             }
 
-            const printWindow = window.open('', '', 'width=800,height=500'); // Larger window
+            const printWindow = window.open('', '', 'width=800,height=500');
 
             // Wider dimensions (approx 7.5cm width x 2cm height)
-            const labelWidth = 284; // ~7.5cm at 96dpi (original was 189px for 5cm)
+            const labelWidth = 284; // ~7.5cm at 96dpi
             const labelHeight = 76; // Same height (2cm)
             const margin = 5;
             const padding = 5;
@@ -563,7 +760,7 @@
                 }
                 .barcode-text {
                     font-family: consolas;
-                    font-size: 30px; /* Slightly larger font */
+                    font-size: 28px;
                     letter-spacing: 2px;
                     white-space: nowrap;
                     text-align: center;
@@ -594,19 +791,126 @@
         }
 
         function copyBarcodeText() {
-            @if (session('barcodeText'))
-                const barcodeText = "{{ session('barcodeText') }}";
+            const barcodeText = "{{ session('barcodeText') ?? '' }}";
+            if (!barcodeText) {
+                showAlert('error', 'No barcode available to copy');
+                return;
+            }
+
+            // Use the modern Clipboard API if available
+            if (navigator.clipboard) {
                 navigator.clipboard.writeText(barcodeText).then(() => {
-                    const btn = document.querySelector('.btn-primary');
-                    const originalText = btn.textContent;
-                    btn.textContent = 'Copied!';
+                    const btn = document.getElementById('copy-barcode-btn');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    btn.style.backgroundColor = 'var(--success)';
                     setTimeout(() => {
-                        btn.textContent = originalText;
+                        btn.innerHTML = originalText;
+                        btn.style.backgroundColor = 'var(--primary)';
                     }, 2000);
+                }).catch(err => {
+                    showAlert('error', 'Failed to copy: ' + err);
                 });
-            @else
-                alert('No barcode available to copy');
-            @endif
+            } else {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = barcodeText;
+                textarea.style.position = 'fixed';
+                document.body.appendChild(textarea);
+                textarea.select();
+
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        const btn = document.getElementById('copy-barcode-btn');
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        btn.style.backgroundColor = 'var(--success)';
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                            btn.style.backgroundColor = 'var(--primary)';
+                        }, 2000);
+                    } else {
+                        showAlert('error', 'Failed to copy barcode text');
+                    }
+                } catch (err) {
+                    showAlert('error', 'Error copying barcode text: ' + err);
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+        }
+
+        function generateNewBarcode() {
+            // Reset the form and scroll to top
+            document.getElementById('generate-form').reset();
+            document.getElementById('pesanan_id').innerHTML = '<option value="">-- Select Order --</option>';
+            document.getElementById('item_variant_id').innerHTML = '<option value="">-- Select Item Variant --</option>';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showAlert(type, message) {
+            // Create alert element
+            const alert = document.createElement('div');
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.padding = '16px';
+            alert.style.borderRadius = '8px';
+            alert.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+            alert.style.color = 'white';
+            alert.style.display = 'flex';
+            alert.style.alignItems = 'center';
+            alert.style.gap = '10px';
+            alert.style.zIndex = '1000';
+            alert.style.transition = 'all 0.3s ease';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-20px)';
+
+            if (type === 'error') {
+                alert.style.backgroundColor = 'var(--error)';
+                alert.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            } else {
+                alert.style.backgroundColor = 'var(--success)';
+                alert.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            }
+
+            document.body.appendChild(alert);
+
+            // Animate in
+            setTimeout(() => {
+                alert.style.opacity = '1';
+                alert.style.transform = 'translateY(0)';
+            }, 10);
+
+            // Animate out after 3 seconds
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    document.body.removeChild(alert);
+                }, 300);
+            }, 3000);
+        }
+
+        function startBarcodeScanner() {
+            // This is a placeholder for actual barcode scanner integration
+            // In a real implementation, this would interface with a barcode scanner API
+            showAlert('info', 'Barcode scanner activated. Scan a barcode now.');
+            document.getElementById('barcode_input').focus();
+        }
+
+        function focusAndOpenKeyboard(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.focus();
+                // For mobile devices, we need to ensure the virtual keyboard opens
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    setTimeout(() => {
+                        element.click();
+                    }, 100);
+                }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -621,6 +925,8 @@
             const containerError = document.getElementById('container-error');
             const generateBtn = document.getElementById('generate-btn');
             const nomorPesananHidden = document.getElementById('nomor_pesanan_hidden');
+            const generateForm = document.getElementById('generate-form');
+            const decodeForm = document.getElementById('decode-form');
 
             // Form validation
             supplierCode.addEventListener('input', function() {
@@ -679,7 +985,7 @@
 
             pesananSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
-                const nomorPesanan = selectedOption.text; // Get the displayed text (PO#62)
+                const nomorPesanan = selectedOption.text;
 
                 // Set hidden field with nomor_pesanan
                 nomorPesananHidden.value = nomorPesanan;
@@ -693,16 +999,16 @@
                 itemVariantSelect.disabled = true;
                 variantLoading.style.display = 'flex';
 
-                // Send the full order number (PO#62)
-                fetch(`/barcode/item-variant/${encodeURIComponent(nomorPesanan)}`)
+                // Send the order ID (value) instead of the order number (text)
+                fetch(`/barcode/item-variant/${this.value}`)
                     .then(res => {
                         if (!res.ok) throw new Error('Failed to load variants');
                         return res.json();
                     })
                     .then(data => {
                         let options = '<option value="">-- Select Item Variant --</option>';
-                        data.forEach(i => {
-                            options += `<option value="${i.id}">${i.nama_variant}</option>`;
+                        data.forEach(v => {
+                            options += `<option value="${v.id}">${v.nama_variant}</option>`;
                         });
                         itemVariantSelect.innerHTML = options;
                         itemVariantSelect.disabled = false;
@@ -716,37 +1022,63 @@
                     });
             });
 
-            // Prevent form submission if validation fails
-            document.querySelector('form[action="{{ route('barcode.generate') }}"]').addEventListener('submit',
-                function(e) {
-                    let isValid = true;
+            // Form submission validation
+            generateForm.addEventListener('submit', function(e) {
+                let isValid = true;
 
-                    // Validate supplier code
-                    if (!/^[A-Za-z]$/.test(supplierCode.value)) {
-                        supplierError.style.display = 'flex';
-                        isValid = false;
-                    }
+                // Validate supplier code
+                if (!/^[A-Za-z]$/.test(supplierCode.value)) {
+                    supplierError.style.display = 'flex';
+                    supplierCode.classList.add('shake');
+                    isValid = false;
+                } else {
+                    supplierError.style.display = 'none';
+                    supplierCode.classList.remove('shake');
+                }
 
-                    // Validate container number
-                    if (containerNumber.value.length !== 3) {
-                        containerError.style.display = 'flex';
-                        isValid = false;
-                    }
+                // Validate container number
+                if (containerNumber.value.length !== 3) {
+                    containerError.style.display = 'flex';
+                    containerNumber.classList.add('shake');
+                    isValid = false;
+                } else {
+                    containerError.style.display = 'none';
+                    containerNumber.classList.remove('shake');
+                }
 
-                    if (!isValid) {
-                        e.preventDefault();
-                        generateBtn.style.transform = 'translateX(0)';
-                        setTimeout(() => {
-                            generateBtn.style.transform = 'translateX(5px)';
-                            setTimeout(() => {
-                                generateBtn.style.transform = 'translateX(-5px)';
-                                setTimeout(() => {
-                                    generateBtn.style.transform = 'translateX(0)';
-                                }, 50);
-                            }, 50);
-                        }, 50);
+                if (!isValid) {
+                    e.preventDefault();
+                    setTimeout(() => {
+                        supplierCode.classList.remove('shake');
+                        containerNumber.classList.remove('shake');
+                    }, 500);
+                }
+            });
+
+            // Auto-uppercase for supplier code
+            supplierCode.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+
+            // Auto-uppercase for container number
+            containerNumber.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+
+            // Focus barcode input on decode form load if there's no data
+            @if (!session('decodedData'))
+                document.getElementById('barcode_input').focus();
+            @endif
+
+            // If there's a barcode to print (from session), scroll to it
+            @if (session('barcodeText'))
+                setTimeout(() => {
+                    const barcodePreview = document.querySelector('.barcode-preview');
+                    if (barcodePreview) {
+                        barcodePreview.scrollIntoView({ behavior: 'smooth' });
                     }
-                });
+                }, 300);
+            @endif
         });
     </script>
 </body>

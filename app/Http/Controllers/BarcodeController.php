@@ -215,25 +215,24 @@ class BarcodeController extends Controller
         return response()->json($orders);
     }
 
-    public function getItemVariant($nomorPesanan)
+    public function getItemVariant($pesananId)
     {
-        // If the parameter comes as "PO", convert it to "PO#62" format
-        if (strpos($nomorPesanan, '#') === false) {
-            // Find the first order that starts with this prefix
-            $pesanan = PesananPenjualan::where('nomor_pesanan', 'like', $nomorPesanan.'#%')->first();
-        } else {
-            $pesanan = PesananPenjualan::where('nomor_pesanan', $nomorPesanan)->first();
-        }
+        // Find the order by ID
+        $pesanan = PesananPenjualan::find($pesananId);
 
         if (!$pesanan) {
             return response()->json([]);
         }
 
-        $detail = DetailPesananPenjualan::with('ItemVariant')
+        // Get all item variants for this order
+        $variants = DetailPesananPenjualan::with('ItemVariant')
             ->where('pesanan_penjualan_id', $pesanan->id)
-            ->get();
+            ->get()
+            ->pluck('ItemVariant')
+            ->unique('id')
+            ->values();
 
-        return response()->json($detail->pluck('ItemVariant'));
+        return response()->json($variants);
     }
 
     public function image($text)
