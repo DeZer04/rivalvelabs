@@ -62,6 +62,7 @@ class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
     public function mount(): void
     {
         $this->form->fill();
+        $this->generateComparisonMatrix();
     }
 
     protected function getFormSchema(): array
@@ -83,7 +84,7 @@ class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
         ];
     }
 
-    protected function resetForm(): void
+    public function resetForm(): void
     {
         $this->comparisons = [];
         $this->showResults = false;
@@ -100,7 +101,10 @@ class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
             'weighted_sum' => [],
             'consistency_vector' => []
         ];
-        $this->generateComparisonMatrix();
+
+        if ($this->groupKriteriaId) {
+            $this->generateComparisonMatrix();
+        }
     }
 
     protected function generateComparisonMatrix(): void
@@ -124,7 +128,7 @@ class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
                         ->where('kriteria_2_id', $kriteria2->id)
                         ->first();
 
-                    $this->comparisons[$key] = $existing ? $this->formatComparisonValue($existing->nilai_perbandingan) : null;
+                    $this->comparisons[$key] = $existing ? $this->formatComparisonValue($existing->nilai_perbandingan) : '';
                 }
             }
         }
@@ -296,6 +300,27 @@ class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
         return $weights;
     }
 
+    public function canCalculate(): bool
+    {
+        if (empty($this->comparisons)) {
+            return false;
+        }
+
+        $requiredCount = count($this->getKriteriaPairs());
+        $completedCount = count(array_filter($this->comparisons, function($value) {
+            return $value !== null && $value !== '';
+        }));
+
+        return $completedCount === $requiredCount;
+    }
+
+    public function getCompletedCountProperty(): int
+    {
+        return count(array_filter($this->comparisons, function($value) {
+            return $value !== null && $value !== '';
+        }));
+    }
+
     protected function checkConsistency(array $matrix, array $weights): array
     {
         $size = count($matrix);
@@ -314,7 +339,9 @@ class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
         $randomIndices = [
             3 => 0.58, 4 => 0.9, 5 => 1.12,
             6 => 1.24, 7 => 1.32, 8 => 1.41,
-            9 => 1.45, 10 => 1.49
+            9 => 1.45, 10 => 1.49, 11 => 1.51,
+            12 => 1.54, 13 => 1.56, 14 => 1.57,
+            15 => 1.58
         ];
 
         $weightedSum = $this->calculateWeightedSum($matrix, $weights);
