@@ -116,7 +116,8 @@ class KaryawanResource extends Resource
                 Tables\Columns\TextColumn::make('email')->label('Email')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('telepon')->label('Telepon')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('alamat')->label('Alamat')->limit(30),
-                Tables\Columns\TextColumn::make('divisi.nama')->label('Divisi')->sortable(),
+                Tables\Columns\TextColumn::make('divisi.nama_divisi')->label('Divisi')->sortable(),
+		Tables\Columns\TextColumn::make('jabatan.nama_jabatan')->label('Jabatan')->sortable(),
                 Tables\Columns\TextColumn::make('tanggal_masuk')->label('Tanggal Masuk')->date()->sortable(),
                 Tables\Columns\TextColumn::make('tanggal_keluar')->label('Tanggal Keluar')->date()->sortable(),
                 Tables\Columns\TextColumn::make('status')
