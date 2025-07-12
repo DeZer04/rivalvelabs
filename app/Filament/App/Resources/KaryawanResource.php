@@ -4,11 +4,13 @@ namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\KaryawanResource\Pages;
 use App\Filament\App\Resources\KaryawanResource\RelationManagers;
+use App\Filament\Imports\KaryawanImporter;
 use App\Models\Karyawan;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -29,6 +31,16 @@ class KaryawanResource extends Resource
                 Forms\Components\TextInput::make('nik')
                     ->required()
                     ->maxLength(100),
+                Forms\Components\ToggleButtons::make('jenis_kelamin')
+                    ->label('Jenis Kelamin')
+                    ->options([
+                        true => 'Laki-laki',
+                        false => 'Perempuan',
+                    ])
+                    ->required(),
+                Forms\Components\DatePicker::make('tanggal_lahir')
+                    ->nullable()
+                    ->label('Tanggal Lahir'),
                 Forms\Components\TextInput::make('email')
                     ->email()
                     ->maxLength(255),
@@ -44,6 +56,22 @@ class KaryawanResource extends Resource
                         Forms\Components\TextInput::make('nama_divisi')
                             ->required()
                             ->maxLength(255),
+                    ]),
+                Forms\Components\Select::make('jabatan_id')
+                    ->relationship('jabatan', 'nama_jabatan')
+                    ->required()
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('nama_jabatan')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Select::make('divisi_id')
+                            ->relationship('divisi', 'nama_divisi')
+                            ->required()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('nama_divisi')
+                                    ->required()
+                                    ->maxLength(255),
+                            ]),
                     ]),
                 Forms\Components\DatePicker::make('tanggal_masuk')
                     ->default(now()),
@@ -64,8 +92,26 @@ class KaryawanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                ImportAction::make()
+                    ->importer(KaryawanImporter::class)
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('nama_karyawan')->label('Nama Karyawan')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('jenis_kelamin')
+                    ->label('Jenis Kelamin')
+                    ->badge()
+                    ->colors([
+                        'success' => fn ($state) => $state === true,
+                        'warning' => fn ($state) => $state === false,
+                    ])
+                    ->formatStateUsing(fn (bool $state) => $state ? 'Laki-laki' : 'Perempuan')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('tanggal_lahir')->label('Tanggal Lahir')->date(),
+                Tables\Columns\TextColumn::make('umur')->label('Umur')
+                ->state(function ($record) {
+                    return \Carbon\Carbon::parse($record->tanggal_lahir)->age . ' tahun';
+                }),
                 Tables\Columns\TextColumn::make('nik')->label('NIK')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('email')->label('Email')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('telepon')->label('Telepon')->searchable()->sortable(),
@@ -75,11 +121,21 @@ class KaryawanResource extends Resource
                 Tables\Columns\TextColumn::make('tanggal_keluar')->label('Tanggal Keluar')->date()->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
-                    ->badge(),
+                    ->badge()
+                    ->colors([
+                        'success' => 'aktif',
+                        'danger' => 'nonaktif',
+                    ]),
                 Tables\Columns\ImageColumn::make('foto')->label('Foto')->circular(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'aktif' => 'Aktif',
+                        'nonaktif' => 'Nonaktif',
+                    ]),
+                Tables\Filters\SelectFilter::make('divisi_id')
+                    ->relationship('divisi', 'nama_divisi')
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

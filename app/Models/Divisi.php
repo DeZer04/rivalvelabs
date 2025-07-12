@@ -15,4 +15,9 @@ class Divisi extends Model
     {
         return $this->hasMany(Karyawan::class);
     }
+
+    public function jabatans()
+    {
+        return $this->hasMany(Jabatan::class);
+    }
 }
