@@ -64,11 +64,25 @@ class KaryawanImporter extends Importer
         ];
     }
 
+
     public function resolveRecord(): ?Karyawan
-    {
-        // Buat record baru setiap kali import
-        return new Karyawan();
-    }
+{
+    return new Karyawan([
+        'nama_karyawan' => $this->data['nama_karyawan'] ?? null,
+        'nik' => $this->data['nik'] ?? null,
+        'email' => $this->data['email'] ?? null,
+        'telepon' => $this->data['telepon'] ?? null,
+        'alamat' => $this->data['alamat'] ?? null,
+        'divisi_id' => $this->data['divisi_id'] ?? null,
+        'jabatan_id' => $this->data['jabatan_id'] ?? null,
+        'tanggal_masuk' => $this->parseDate($this->data['tanggal_masuk']),
+        'tanggal_keluar' => $this->parseDate($this->data['tanggal_keluar']),
+        'status' => $this->data['status'] ?? null,
+        'foto' => $this->data['foto'] ?? null,
+        'jenis_kelamin' => $this->data['jenis_kelamin'] ?? null,
+        'tanggal_lahir' => $this->parseDate($this->data['tanggal_lahir']),
+    ]);
+}
 
     public function mutateBeforeFill(array $data): array
     {
@@ -82,15 +96,14 @@ class KaryawanImporter extends Importer
         return $data;
     }
 
-    protected function parseTanggal($value): ?string
-    {
-        // Coba parsing berbagai format tanggal
-        try {
-            return Carbon::parse($value)->format('Y-m-d');
-        } catch (\Exception $e) {
-            return null;
-        }
+    protected function parseDate($value): ?string
+{
+    try {
+        return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
+    } catch (\Exception $e) {
+        return null;
     }
+}
 
     public static function getCompletedNotificationBody(Import $import): string
     {
