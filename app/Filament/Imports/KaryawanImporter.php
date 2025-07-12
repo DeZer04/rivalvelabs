@@ -64,29 +64,8 @@ class KaryawanImporter extends Importer
         ];
     }
 
-
-    public function resolveRecord(): ?Karyawan
-{
-    return new Karyawan([
-        'nama_karyawan' => $this->data['nama_karyawan'] ?? null,
-        'nik' => $this->data['nik'] ?? null,
-        'email' => $this->data['email'] ?? null,
-        'telepon' => $this->data['telepon'] ?? null,
-        'alamat' => $this->data['alamat'] ?? null,
-        'divisi_id' => $this->data['divisi_id'] ?? null,
-        'jabatan_id' => $this->data['jabatan_id'] ?? null,
-        'tanggal_masuk' => $this->parseDate($this->data['tanggal_masuk']),
-        'tanggal_keluar' => $this->parseDate($this->data['tanggal_keluar']),
-        'status' => $this->data['status'] ?? null,
-        'foto' => $this->data['foto'] ?? null,
-        'jenis_kelamin' => $this->data['jenis_kelamin'] ?? null,
-        'tanggal_lahir' => $this->parseDate($this->data['tanggal_lahir']),
-    ]);
-}
-
     public function mutateBeforeFill(array $data): array
     {
-        // Normalisasi format tanggal
         foreach (['tanggal_masuk', 'tanggal_keluar', 'tanggal_lahir'] as $field) {
             if (!empty($data[$field])) {
                 $data[$field] = $this->parseTanggal($data[$field]);
@@ -96,14 +75,31 @@ class KaryawanImporter extends Importer
         return $data;
     }
 
-    protected function parseDate($value): ?string
-{
-    try {
-        return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
-    } catch (\Exception $e) {
-        return null;
+    protected function parseTanggal($value): ?string
+    {
+        $formats = ['d F Y', 'd M Y', 'Y-m-d', 'd/m/Y', 'd-m-Y'];
+
+        foreach ($formats as $format) {
+            try {
+                return Carbon::createFromFormat($format, $value)->format('Y-m-d');
+            } catch (\Exception $e) {
+                // continue to next format
+            }
+        }
+
+        // fallback to Carbon::parse()
+        try {
+            return Carbon::parse($value)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
     }
-}
+
+    public function resolveRecord(): ?Karyawan
+    {
+        // Selalu buat record baru (jangan isi data manual di sini)
+        return new Karyawan();
+    }
 
     public static function getCompletedNotificationBody(Import $import): string
     {
