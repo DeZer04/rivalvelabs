@@ -3,6 +3,7 @@
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\KriteriaResource\Pages;
+use App\Filament\Pages\AhpKalkulasi;
 use App\Models\GroupKriteria;
 use App\Models\Kriteria;
 use Filament\Forms;
@@ -36,6 +37,7 @@ class KriteriaResource extends Resource
                     ->schema([
                         Forms\Components\Repeater::make('kriterias')
                             ->relationship()
+                            ->reorderable(true)
                             ->schema([
                                 Forms\Components\TextInput::make('nama_kriteria')
                                     ->label('Nama Kriteria')
@@ -69,9 +71,26 @@ class KriteriaResource extends Resource
                 Tables\Columns\TextColumn::make('kriterias_count')
                     ->counts('kriterias')
                     ->label('Jumlah Kriteria'),
+                Tables\Columns\TextColumn::make('ahpResult.created_at')
+                    ->label('Terakhir Dihitung')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('viewReport')
+                    ->label('Lihat Report')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->url(fn (GroupKriteria $record) => KriteriaResource::getUrl('report', ['record' => $record]))
+                    ->visible(fn (GroupKriteria $record) => $record->is_calculated),
+                Tables\Actions\Action::make('calculate')
+                    ->label('Hitung AHP')
+                    ->icon('heroicon-o-calculator')
+                    ->color('primary')
+                    ->url(fn (GroupKriteria $record) => AhpKalkulasi::getUrl(['groupKriteriaId' => $record->id]))
+                    ->visible(fn (GroupKriteria $record) => !$record->is_calculated),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -86,6 +105,7 @@ class KriteriaResource extends Resource
             'index' => Pages\ListKriterias::route('/'),
             'create' => Pages\CreateKriteria::route('/create'),
             'edit' => Pages\EditKriteria::route('/{record}/edit'),
+            'report' => Pages\ReportKriteria::route('/{record}/report'),
         ];
     }
 }

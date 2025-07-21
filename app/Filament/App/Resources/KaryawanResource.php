@@ -97,29 +97,32 @@ class KaryawanResource extends Resource
                     ->importer(KaryawanImporter::class)
             ])
             ->columns([
+                Tables\Columns\TextColumn::make('nik')->label('NIK')->searchable()->sortable(),
+                Tables\Columns\ImageColumn::make('foto')->label('Foto')->circular(),
                 Tables\Columns\TextColumn::make('nama_karyawan')->label('Nama Karyawan')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('jenis_kelamin')
                     ->label('Jenis Kelamin')
                     ->badge()
                     ->colors([
-                        'success' => fn ($state) => $state === true,
-                        'warning' => fn ($state) => $state === false,
+                        'primary' => fn ($state) => $state === 1,      // Laki-laki: biru
+                        'warning' => fn ($state) => $state === 0,        // Perempuan: pink
                     ])
                     ->formatStateUsing(fn (bool $state) => $state ? 'Laki-laki' : 'Perempuan')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('tanggal_lahir')->label('Tanggal Lahir')->date(),
-                Tables\Columns\TextColumn::make('umur')->label('Umur')
-                ->state(function ($record) {
-                    return \Carbon\Carbon::parse($record->tanggal_lahir)->age . ' tahun';
-                }),
-                Tables\Columns\TextColumn::make('nik')->label('NIK')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('email')->label('Email')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('telepon')->label('Telepon')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('alamat')->label('Alamat')->limit(30),
+                Tables\Columns\TextColumn::make('umur')
+                    ->label('Umur')
+                    ->state(function ($record) {
+                        return \Carbon\Carbon::parse($record->tanggal_lahir)->age . ' tahun';
+                    }),
                 Tables\Columns\TextColumn::make('divisi.nama_divisi')->label('Divisi')->sortable(),
-		Tables\Columns\TextColumn::make('jabatan.nama_jabatan')->label('Jabatan')->sortable(),
-                Tables\Columns\TextColumn::make('tanggal_masuk')->label('Tanggal Masuk')->date()->sortable(),
-                Tables\Columns\TextColumn::make('tanggal_keluar')->label('Tanggal Keluar')->date()->sortable(),
+		        Tables\Columns\TextColumn::make('jabatan.nama_jabatan')->label('Jabatan')->sortable(),
+                Tables\Columns\TextColumn::make('lamabekerja')
+                    ->label('Lama Bekerja')
+                    ->state(function ($record) {
+                        return $record->tanggal_masuk
+                            ? \Carbon\Carbon::parse($record->tanggal_masuk)->diffForHumans()
+                            : '-';
+                    }),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -127,7 +130,7 @@ class KaryawanResource extends Resource
                         'success' => 'aktif',
                         'danger' => 'nonaktif',
                     ]),
-                Tables\Columns\ImageColumn::make('foto')->label('Foto')->circular(),
+
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')

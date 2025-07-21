@@ -161,7 +161,6 @@ class ItemResource extends Resource
                                             ->required(),
                                         TextInput::make('nama_finishing_kayu')->required(),
                                     ])
-                                    ->searchable()
                                     ->required(),
 
                                 // Jenis Anyam

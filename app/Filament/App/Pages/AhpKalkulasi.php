@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Ahp_result;
 use App\Models\GroupKriteria;
 use App\Models\Kriteria;
 use App\Models\PairwiseComparison;
@@ -9,6 +10,7 @@ use Filament\Pages\Page;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
@@ -399,34 +401,58 @@ class AhpKalkulasi extends Page implements Forms\Contracts\HasForms
             return;
         }
 
-        PairwiseComparison::where('group_kriteria_id', $this->groupKriteriaId)->delete();
+        // Mulai transaksi database
+        DB::transaction(function () {
+            // Hapus data perbandingan yang lama
+            PairwiseComparison::where('group_kriteria_id', $this->groupKriteriaId)->delete();
 
-        foreach ($this->comparisons as $key => $value) {
-            [$id1, $id2] = explode('_', $key);
-            $numericValue = $this->parseComparisonValue($value);
-            $inverseValue = $numericValue > 0 ? 1 / $numericValue : 0;
+            // Hapus hasil AHP yang lama
+            Ahp_result::where('group_kriteria_id', $this->groupKriteriaId)->delete();
 
-            PairwiseComparison::create([
+            // Simpan perbandingan berpasangan
+            foreach ($this->comparisons as $key => $value) {
+                [$id1, $id2] = explode('_', $key);
+                $numericValue = $this->parseComparisonValue($value);
+                $inverseValue = $numericValue > 0 ? 1 / $numericValue : 0;
+
+                PairwiseComparison::create([
+                    'group_kriteria_id' => $this->groupKriteriaId,
+                    'kriteria_1_id' => $id1,
+                    'kriteria_2_id' => $id2,
+                    'nilai_perbandingan' => $numericValue,
+                ]);
+
+                PairwiseComparison::create([
+                    'group_kriteria_id' => $this->groupKriteriaId,
+                    'kriteria_1_id' => $id2,
+                    'kriteria_2_id' => $id1,
+                    'nilai_perbandingan' => $inverseValue,
+                ]);
+            }
+
+            // Simpan hasil perhitungan AHP
+            Ahp_result::create([
                 'group_kriteria_id' => $this->groupKriteriaId,
-                'kriteria_1_id' => $id1,
-                'kriteria_2_id' => $id2,
-                'nilai_perbandingan' => $numericValue,
+                'original_matrix' => json_encode($this->consistencyResults['original_matrix']),
+                'normalized_matrix' => json_encode($this->consistencyResults['normalized_matrix']),
+                'weights' => json_encode($this->consistencyResults['weights']),
+                'lambda_max' => $this->consistencyResults['lambda_max'],
+                'consistency_index' => $this->consistencyResults['index'],
+                'random_index' => $this->consistencyResults['random_index'],
+                'consistency_ratio' => $this->consistencyResults['ratio'],
+                'is_consistent' => $this->consistencyResults['is_consistent'],
+                'weighted_sum' => json_encode($this->consistencyResults['weighted_sum']),
+                'consistency_vector' => json_encode($this->consistencyResults['consistency_vector']),
             ]);
 
-            PairwiseComparison::create([
-                'group_kriteria_id' => $this->groupKriteriaId,
-                'kriteria_1_id' => $id2,
-                'kriteria_2_id' => $id1,
-                'nilai_perbandingan' => $inverseValue,
-            ]);
-        }
-
-        GroupKriteria::where('id', $this->groupKriteriaId)
-            ->update(['is_calculated' => true]);
+            // Tandai grup kriteria sebagai sudah dihitung
+            GroupKriteria::where('id', $this->groupKriteriaId)
+                ->update(['is_calculated' => true]);
+        });
 
         Notification::make()
             ->title('Saved Successfully')
-            ->body('Pairwise comparisons saved successfully')
+            ->body('Pairwise comparisons and AHP results saved successfully')
             ->success()
             ->send();
     }

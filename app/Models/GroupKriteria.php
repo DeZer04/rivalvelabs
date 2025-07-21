@@ -22,4 +22,9 @@ class GroupKriteria extends Model
     {
         return $query->where('is_calculated', false);
     }
+
+    public function ahpResult()
+    {
+        return $this->hasOne(Ahp_result::class);
+    }
 }
