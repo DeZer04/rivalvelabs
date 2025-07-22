@@ -138,30 +138,35 @@ class ItemResource extends Resource
                                     ->required(),
 
                                 // Grade Kayu
-                                Select::make('grade_kayu_id')
+                               Select::make('grade_kayu_id')
                                     ->label('Grade Kayu')
-                                    ->relationship('gradeKayu', 'nama_grade_kayu')
-                                    ->createOptionModalHeading('Tambah Grade Kayu Baru')
-                                    ->createOptionForm([
-                                        Select::make('jenis_kayu_id')
-                                            ->relationship('jenisKayu', 'nama_jenis_kayu')
-                                            ->required(),
-                                        TextInput::make('nama_grade_kayu')->required(),
-                                    ])
-                                    ->required(),
+                                    ->options(function (callable $get) {
+                                        $jenisKayuId = $get('jenis_kayu_id');
+                                        if (!$jenisKayuId) return [];
+
+                                        return \App\Models\GradeKayu::where('jenis_kayu_id', $jenisKayuId)
+                                            ->pluck('nama_grade_kayu', 'id');
+                                    })
+                                    ->required()
+                                    ->reactive()
+                                    ->dependsOn(['jenis_kayu_id'])
+                                    ->afterStateUpdated(fn (callable $set) => $set('grade_kayu_id', null)),
 
                                 // Finishing Kayu
                                 Select::make('finishing_kayu_id')
                                     ->label('Finishing Kayu')
-                                    ->relationship('finishingKayu', 'nama_finishing_kayu')
-                                    ->createOptionModalHeading('Tambah Finishing Kayu Baru')
-                                    ->createOptionForm([
-                                        Select::make('jenis_kayu_id')
-                                            ->relationship('jenisKayu', 'nama_jenis_kayu')
-                                            ->required(),
-                                        TextInput::make('nama_finishing_kayu')->required(),
-                                    ])
-                                    ->required(),
+                                    ->options(function (callable $get) {
+                                        $jenisKayuId = $get('jenis_kayu_id');
+                                        if (!$jenisKayuId) return [];
+
+                                        return \App\Models\FinishingKayu::where('jenis_kayu_id', $jenisKayuId)
+                                            ->pluck('nama_finishing_kayu', 'id');
+                                    })
+                                    ->required()
+                                    ->reactive()
+                                    ->dependsOn(['jenis_kayu_id'])
+                                    ->afterStateUpdated(fn (callable $set) => $set('finishing_kayu_id', null)),
+
 
                                 // Jenis Anyam
                                 Select::make('jenis_anyam_id')
@@ -176,15 +181,17 @@ class ItemResource extends Resource
                                 // Warna Anyam
                                 Select::make('warna_anyam_id')
                                     ->label('Warna Anyam')
-                                    ->relationship('warnaAnyam', 'nama_warna_anyam')
-                                    ->createOptionModalHeading('Tambah Warna Anyam Baru')
-                                    ->createOptionForm([
-                                        Select::make('jenis_anyam_id')
-                                            ->relationship('jenisAnyam', 'nama_jenis_anyam')
-                                            ->required(),
-                                        TextInput::make('nama_warna_anyam')->required(),
-                                    ])
-                                    ->required(),
+                                    ->options(function (callable $get) {
+                                        $jenisAnyamId = $get('jenis_anyam_id');
+                                        if (!$jenisAnyamId) return [];
+
+                                        return \App\Models\WarnaAnyam::where('jenis_anyam_id', $jenisAnyamId)
+                                            ->pluck('nama_warna_anyam', 'id');
+                                    })
+                                    ->required()
+                                    ->reactive()
+                                    ->dependsOn(['jenis_anyam_id'])
+                                    ->afterStateUpdated(fn (callable $set) => $set('warna_anyam_id', null)),
 
                                 // Model Anyam
                                 Select::make('model_anyam_id')
