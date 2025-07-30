@@ -102,7 +102,7 @@ class GenerateBarcode extends Page implements HasForms
         // Ambil data dari formData['formData'] jika ada
         $data = $formData['formData'] ?? $formData;
 
-        $itemVariantId = $data['item_variant_id'] ?? null;
+        $itemVariantId = $data['kode_itemvariants'] ?? null;
         $buyerId = $data['buyer_id'] ?? null;
         $pesananId = $data['pesanan_id'] ?? null;
         $supplierLine = $data['supplier_line'] ?? 'X'; // default 'X' jika tidak dipilih
@@ -111,7 +111,7 @@ class GenerateBarcode extends Page implements HasForms
         // Ambil item_id dari item_variant jika diperlukan
         $itemId = null;
         if ($itemVariantId) {
-            $detail = \App\Models\DetailPesananPenjualan::where('item_variant_id', $itemVariantId)->first();
+            $detail = \App\Models\DetailPesananPenjualan::where('kode_itemvariants', $itemVariantId)->first();
             $itemId = $detail?->item_id;
         }
 
