@@ -54,11 +54,6 @@ class ItemResource extends Resource
                                 ->label('Sub Kategori')
                                 ->relationship('subCategory', 'nama_sub_category')
                                 ->createOptionForm([
-                                    Select::make('item_category_id')
-                                        ->label('Kategori')
-                                        ->relationship('itemCategory', 'nama_item_category')
-                                        ->required(),
-
                                     TextInput::make('nama_sub_category')
                                         ->required()
                                         ->label('Nama Sub Kategori'),
@@ -71,18 +66,6 @@ class ItemResource extends Resource
                                 ->label('Nama Item')
                                 ->required()
                                 ->columnSpan(3),
-
-                            TextInput::make('kode_item')
-                                ->label('Kode Item')
-                                ->nullable()
-                                ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                    // Automatically generate kode_item if not provided
-                                    if (empty($state)) {
-                                        $count = \App\Models\Item::count() + 1;
-                                        $set('kode_item', str_pad($count, 4, '0', STR_PAD_LEFT));
-                                    }
-                                })
-                                ->columnSpan(2),
                     ]),
 
                     // Master Gambar + Dimensi W/D/H di kanan atas
@@ -132,17 +115,6 @@ class ItemResource extends Resource
                         ->schema([
                             Grid::make(2)->schema([
                                 TextInput::make('nama_variant')->required()->label('Nama Varian'),
-
-                                TextInput::make('kode_itemvariants')
-                                    ->label('Kode Varian')
-                                    ->nullable()
-                                    ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                        // Automatically generate kode_itemvariants if not provided
-                                        if (empty($state)) {
-                                            $count = \App\Models\ItemVariant::count() + 1;
-                                            $set('kode_itemvariants', str_pad($count, 4, '0', STR_PAD_LEFT));
-                                        }
-                                    }),
 
                                 FileUpload::make('gambar_item')
                                     ->image()
