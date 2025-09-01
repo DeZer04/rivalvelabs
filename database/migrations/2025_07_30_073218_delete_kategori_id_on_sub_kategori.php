@@ -26,7 +26,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('sub_categories', function (Blueprint $table) {
-            // Re-add kategori_id column if needed
+            // Re-add item_category_id column if needed
+            if (!Schema::hasColumn('sub_categories', 'item_category_id')) {
+            $table->unsignedBigInteger('item_category_id')->nullable();
+
+            // If you want to restore the foreign key constraint, adjust the referenced table/column as needed
+            $table->foreign('item_category_id')->references('id')->on('item_categories')->onDelete('set null');
+            }
         });
     }
 };

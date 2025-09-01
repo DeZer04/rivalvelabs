@@ -44,7 +44,7 @@
                     @foreach($kriterias as $index => $kriteria)
                     <tr>
                         <td class="py-2 px-4">
-                        <span class="font-medium">Cw{{ $index + 1 }}.</span>
+                        <span class="font-medium">C{{ $index + 1 }}.</span>
                         </td>
                         <th class="py-2 px-4 text-left font-medium text-gray-700">
                         {{ $kriteria->nama_kriteria }}

@@ -69,29 +69,35 @@ class PenilaianWizard extends Page implements Forms\Contracts\HasForms
 
                 Step::make('Pilih Karyawan')
                     ->schema([
-                        Forms\Components\CheckboxList::make('karyawans')
+                        Forms\Components\Select::make('karyawans')
                             ->label('Pilih Karyawan yang Dinilai')
                             ->options(function () {
-                                // Ambil semua divisi dan karyawannya
-                                return \App\Models\Karyawan::with('divisi')->get()->groupBy(function ($karyawan) {
-                                    return $karyawan->divisi ? $karyawan->divisi->nama_divisi : 'Tanpa Divisi';
-                                })->mapWithKeys(function ($grouped, $divisiNama) {
-                                    // Buat array optgroup
-                                    return [
-                                        $divisiNama => $grouped->mapWithKeys(fn($karyawan) => [
-                                            $karyawan->id => $karyawan->nama_karyawan
-                                        ])->toArray()
-                                    ];
-                                })->toArray();
+                                return Karyawan::with('divisi')
+                                    ->get()
+                                    ->groupBy('divisi.nama_divisi')
+                                    ->mapWithKeys(function ($group, $divisi) {
+                                        return [$divisi => $group->pluck('nama_karyawan', 'id')->toArray()];
+                                    })
+                                    ->toArray();
                             })
+                            ->multiple()
                             ->required()
-                            ->columns(1)
-                            ->reactive()
-                            ->helperText('Karyawan dikelompokkan berdasarkan divisi (optgroup).'),
+                            ->preload()
+                            ->searchable(),
                     ]),
 
-                Step::make('Input Nilai')
-                    ->schema(fn () => $this->generateNilaiSchema()),
+                Step::make('Konfirmasi')
+                    ->schema([
+                        Forms\Components\Placeholder::make('selected_karyawans')
+                            ->label('Karyawan yang Akan Dinilai')
+                            ->content(function ($get) {
+                                $karyawans = Karyawan::whereIn('id', $get('karyawans') ?? [])->get();
+
+                                return view('filament.app.components.karyawan-list', [
+                                    'karyawans' => $karyawans
+                                ]);
+                            }),
+                    ]),
             ])
             ->statePath('data') // <-- Tambahkan ini
             ->submitAction('Simpan')

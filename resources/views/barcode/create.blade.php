@@ -247,7 +247,7 @@
 
         .barcode-text {
             font-family: 'consolas', monospace;
-            font-size: 42px;
+            font-size: 30px;
             letter-spacing: 2px;
             margin: 8px 0;
             color: var(--text);
@@ -720,11 +720,11 @@
 
             const printWindow = window.open('', '', 'width=800,height=500');
 
-            // Wider dimensions (approx 7.5cm width x 2cm height)
-            const labelWidth = 284; // ~7.5cm at 96dpi
-            const labelHeight = 76; // Same height (2cm)
-            const margin = 5;
-            const padding = 5;
+            // Ukuran dalam piksel untuk 5x2 cm pada 96 DPI
+            const labelWidth = 189; // 5 cm = 189 piksel
+            const labelHeight = 76; // 2 cm = 76 piksel
+            const margin = 5; // Margin kecil
+            const gap = 10; // Jarak antara dua barcode
 
             printWindow.document.write(`
             <html>
@@ -732,59 +732,51 @@
             <title>Print Barcode Text</title>
             <style>
                 @page {
-                    size: ${labelWidth + margin*2}px ${labelHeight*2 + margin*3}px;
+                    size: ${labelWidth + margin*2}px ${(labelHeight * 2) + (gap) + (margin * 2)}px;
                     margin: ${margin}px;
                 }
                 body {
-                    margin-bottom: 0;
-                    margin-left: 0;
-                    margin-right: 0;
-                    margin-top: 10px;
+                    margin: 0;
                     padding: 0;
                     background-color: white;
-                }
-                .label-sheet {
                     display: flex;
                     flex-direction: column;
-                    gap: ${margin}px;
+                    justify-content: space-between;
+                    align-items: center;
+                    height: 100vh;
                 }
                 .label {
                     width: ${labelWidth}px;
                     height: ${labelHeight}px;
-                    border: 2px solid #000;
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    page-break-inside: avoid;
-                    padding: ${padding}px;
                     box-sizing: border-box;
-                    overflow: visible;
                 }
                 .barcode-text {
-                    font-family: consolas;
-                    font-size: 28px;
-                    letter-spacing: 2px;
-                    white-space: nowrap;
+                    font-family: 'Consolas', monospace;
+                    font-size: 14px;
+                    letter-spacing: 1px;
                     text-align: center;
+                    padding: 5px;
                     width: 100%;
                 }
             </style>
             </head>
             <body>
-                <div class="label-sheet">
-                    <div class="label">
-                        <div class="barcode-text">${barcodeText}</div>
-                    </div>
-                    <div class="label">
-                        <div class="barcode-text">${barcodeText}</div>
-                    </div>
+                <div class="label">
+                    <div class="barcode-text">${barcodeText}</div>
+                </div>
+                <div class="label">
+                    <div class="barcode-text">${barcodeText}</div>
                 </div>
                 <script>
                     setTimeout(() => {
-                        window.focus();
                         window.print();
-                        window.close();
-                    }, 300);
+                        window.onafterprint = function() {
+                            window.close();
+                        };
+                    }, 100);
                 <\/script>
             </body>
             </html>

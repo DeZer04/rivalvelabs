@@ -41,7 +41,7 @@ class BarcodeController extends Controller
         $pesananCode = str_pad($orderSequence, 3, '0', STR_PAD_LEFT);
         $kontainer = strtoupper($containerNumber);
 
-        return "{$kodeItem}{$buyerCode}{$pesananCode}{$supplier}{$kontainer}";
+        return "S/N : {$kodeItem}{$buyerCode}{$pesananCode}{$supplier}{$kontainer}";
     }
 
 
