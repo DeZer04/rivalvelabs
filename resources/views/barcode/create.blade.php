@@ -744,6 +744,7 @@
                     justify-content: space-between;
                     align-items: center;
                     height: 100vh;
+                    position: relative;
                 }
                 .label {
                     width: ${labelWidth}px;
@@ -755,11 +756,34 @@
                 }
                 .barcode-text {
                     font-family: 'Consolas', monospace;
-                    font-size: 14px;
-                    letter-spacing: 1px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    letter-spacing: 1.5px;
                     text-align: center;
                     padding: 5px;
                     width: 100%;
+                }
+                .cut-line {
+                    position: absolute;
+                    left: ${margin}px;
+                    right: ${margin}px;
+                    top: 50%;
+                    height: 0;
+                    border-top: 1px dashed #000;
+                    pointer-events: none;
+                }
+                .cut-line::before,
+                .cut-line::after {
+                    position: absolute;
+                    top: -10px;
+                    font-size: 12px;
+                    color: #999;
+                }
+                .cut-line::before {
+                    left: 5px;
+                }
+                .cut-line::after {
+                    right: 5px;
                 }
             </style>
             </head>
@@ -767,6 +791,7 @@
                 <div class="label">
                     <div class="barcode-text">${barcodeText}</div>
                 </div>
+                <div class="cut-line"></div>
                 <div class="label">
                     <div class="barcode-text">${barcodeText}</div>
                 </div>
