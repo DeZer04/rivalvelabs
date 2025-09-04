@@ -203,7 +203,7 @@ class BarcodeController extends Controller
                 'variant' => [
                     'id' => $variant->id,
                     'nama_variant' => $variant->nama_variant,
-                    'kode_itemvariants' => $variant->kode_itemvariants,
+                    'kode_itemvariants' => $variant->id,
                 ],
                 'buyer' => [
                     'id' => $buyer->id,
