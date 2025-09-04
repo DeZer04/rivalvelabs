@@ -44,43 +44,107 @@ class BarcodeController extends Controller
         return "S/N:{$kodeItem}{$buyerCode}{$pesananCode}{$supplier}{$kontainer}";
     }
 
-
     public function generate(Request $request)
     {
-        $request->validate([
-            'buyer_id' => 'required|exists:buyers,id',
-            'nomor_pesanan' => 'required|exists:pesanan_penjualans,nomor_pesanan',
-            'item_variant_id' => 'required|exists:item_variants,id',
-            'supplier_code' => 'required|alpha|max:1',
-            'nomor_container' => 'required|alpha_num|max:3',
-        ]);
+        // Check if this is an AJAX request
+        $isAjax = $request->ajax() || $request->wantsJson();
 
-        $buyer = Buyer::find($request->buyer_id);
-        $pesanan = PesananPenjualan::where('nomor_pesanan', $request->nomor_pesanan)->first();
+        try {
+            $request->validate([
+                'buyer_id' => 'required|exists:buyers,id',
+                'pesanan_id' => 'required|exists:pesanan_penjualans,id', // Changed from nomor_pesanan to pesanan_id
+                'item_variant_id' => 'required|exists:item_variants,id',
+                'supplier_code' => 'required|alpha|max:1',
+                'nomor_container' => 'required|alpha_num|max:3',
+            ]);
 
-        // Pastikan pesanan milik buyer yang benar
-        if ($pesanan->buyer_id != $buyer->id) {
-            return back()->withErrors(['nomor_pesanan' => 'Nomor pesanan tidak sesuai dengan buyer yang dipilih']);
+            $buyer = Buyer::find($request->buyer_id);
+            $pesanan = PesananPenjualan::find($request->pesanan_id); // Changed to find by ID
+
+            // Pastikan pesanan milik buyer yang benar
+            if ($pesanan->buyer_id != $buyer->id) {
+                $errorMessage = 'Nomor pesanan tidak sesuai dengan buyer yang dipilih';
+
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'errors' => ['pesanan_id' => [$errorMessage]]
+                    ], 422);
+                }
+
+                return back()->withErrors(['pesanan_id' => $errorMessage]);
+            }
+
+            // Check if the variant exists in this order
+            $variant = $pesanan->DetailPesananPenjualan
+                ->where('item_variant_id', $request->item_variant_id)
+                ->first()?->ItemVariant;
+
+            if (!$variant) {
+                $errorMessage = 'Item variant tidak ditemukan dalam pesanan ini';
+
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'errors' => ['item_variant_id' => [$errorMessage]]
+                    ], 422);
+                }
+
+                return back()->withErrors(['item_variant_id' => $errorMessage]);
+            }
+
+            // Extract order sequence from pesanan
+            $pesananNumber = $this->extractNumberFromNomorPesanan($pesanan->nomor_pesanan);
+
+            // Format nomor pesanan untuk barcode (3 digit)
+            $pesananCode = str_pad($pesananNumber, 3, '0', STR_PAD_LEFT);
+
+            $barcodeText = $this->generateBarcodeText(
+                $variant->id,
+                $buyer->id,
+                $pesananCode,
+                $request->supplier_code,
+                $request->nomor_container
+            );
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'barcodeText' => $barcodeText,
+                    'data' => [
+                        'buyer' => $buyer,
+                        'pesanan' => $pesanan,
+                        'variant' => $variant
+                    ]
+                ]);
+            }
+
+            return redirect()->route('barcode.create')->with('barcodeText', $barcodeText);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            Log::error('Barcode generation error: ' . $e->getMessage());
+
+            $errorMessage = 'Terjadi kesalahan saat menggenerate barcode';
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage
+                ], 500);
+            }
+
+            return back()->withErrors(['general' => $errorMessage]);
         }
-
-        $variant = $pesanan->DetailPesananPenjualan
-            ->where('item_variant_id', $request->item_variant_id)
-            ->first()?->ItemVariant;
-
-        $pesananNumber = $this->extractNumberFromNomorPesanan($request->nomor_pesanan);
-
-        // Format nomor pesanan untuk barcode (3 digit)
-        $pesananCode = str_pad($pesananNumber, 3, '0', STR_PAD_LEFT);
-
-        $barcodeText = $this->generateBarcodeText(
-            $variant->id,
-            $buyer->id,
-            $pesananCode, // Menggunakan kode pesanan 3 digit
-            $request->supplier_code,
-            $request->nomor_container
-        );
-
-        return redirect()->route('barcode.create')->with('barcodeText', $barcodeText);
     }
 
     protected function decodeBarcode($barcode)
@@ -113,6 +177,7 @@ class BarcodeController extends Controller
             $supplier = Supplier::where('kode_supplier', 'LIKE', '%' . $supplierCode . '%')->first();
             if (!$supplier) throw new \Exception('Production Line tidak ditemukan');
 
+            $pesananCode = ltrim($pesananCode, '0'); // "062" -> "62"
             // Cari semua pesanan dari buyer yang cocok dengan nomor pesanan
             $pesananList = PesananPenjualan::where('buyer_id', $buyerId)
                 ->where('nomor_pesanan', 'LIKE', 'PO#' . $pesananCode . '%')
@@ -135,17 +200,31 @@ class BarcodeController extends Controller
             }
 
             return [
-                'variant' => $variant,
-                'buyer' => $buyer,
-                'pesanan' => $pesanan,
-                'supplier' => $supplier,
-                'pesanan_code' => $pesanan->nomor_pesanan,
+                'variant' => [
+                    'id' => $variant->id,
+                    'nama_variant' => $variant->nama_variant,
+                    'kode_itemvariants' => $variant->kode_itemvariants,
+                ],
+                'buyer' => [
+                    'id' => $buyer->id,
+                    'nama_buyer' => $buyer->nama_buyer,
+                ],
+                'pesanan' => [
+                    'id' => $pesanan->id,
+                    'nomor_pesanan' => $pesanan->nomor_pesanan,
+                    'tanggal_pesanan' => $pesanan->tanggal_pesanan,
+                ],
+                'supplier' => [
+                    'id' => $supplier->id,
+                    'nama_supplier' => $supplier->nama_supplier,
+                    'kode_supplier' => $supplier->kode_supplier,
+                ],
                 'order_sequence' => $pesananCode,
                 'supplier_code' => $supplierCode,
                 'container_number' => $containerNumber,
                 'original_barcode' => $barcode,
                 'is_valid' => true,
-                'error' => null
+                'error' => null,
             ];
         } catch (\Exception $e) {
             return [
@@ -173,7 +252,18 @@ class BarcodeController extends Controller
 
         $decodedData = $this->decodeBarcode($request->barcode_input);
 
-        return back()->with('decodedData', $decodedData);
+        if ($decodedData['is_valid']) {
+            return response()->json([
+                'success' => true,
+                'data' => $decodedData
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $decodedData['error'],
+            'data' => $decodedData
+        ], 422);
     }
 
     public function getPesanan($buyerId)

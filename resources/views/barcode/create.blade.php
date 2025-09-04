@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* CSS yang sudah ada tetap dipertahankan */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -474,15 +475,17 @@
         <div class="container" style="margin-right: 10px;">
             <h2><i class="fas fa-barcode"></i> Generate Barcode</h2>
 
-            @if ($errors->any())
-                <div class="error-list">
-                    <ul>
-                        @foreach ($errors->all() as $e)
-                            <li>{{ $e }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <div id="error-container">
+                @if ($errors->any())
+                    <div class="error-list">
+                        <ul>
+                            @foreach ($errors->all() as $e)
+                                <li>{{ $e }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
 
             <!-- Generate Barcode Form -->
             <form method="POST" action="{{ route('barcode.generate') }}" id="generate-form">
@@ -574,24 +577,26 @@
                 </button>
             </form>
 
-            @if (session('barcodeText'))
-                <div class="barcode-preview" id="print-area">
-                    <div class="barcode-container">
-                        <div class="barcode-text">{{ session('barcodeText') }}</div>
+            <div id="barcode-preview-container">
+                @if (session('barcodeText'))
+                    <div class="barcode-preview" id="print-area">
+                        <div class="barcode-container">
+                            <div class="barcode-text" id="barcode-text"></div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-success" onclick="printBarcode()">
+                                <i class="fas fa-print"></i> Print Barcode
+                            </button>
+                            <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
+                                <i class="far fa-copy"></i> Copy Text
+                            </button>
+                            <button class="btn btn-warning" onclick="generateNewBarcode()">
+                                <i class="fas fa-sync-alt"></i> New Barcode
+                            </button>
+                        </div>
                     </div>
-                    <div class="actions">
-                        <button class="btn btn-success" onclick="printBarcode()">
-                            <i class="fas fa-print"></i> Print Barcode
-                        </button>
-                        <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
-                            <i class="far fa-copy"></i> Copy Text
-                        </button>
-                        <button class="btn btn-warning" onclick="generateNewBarcode()">
-                            <i class="fas fa-sync-alt"></i> New Barcode
-                        </button>
-                    </div>
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
 
         <!-- Decode Section (Right) -->
@@ -618,101 +623,104 @@
                 </form>
             </div>
 
-            @if (session('decodedData'))
-                <div class="barcode-preview" style="margin-top: 32px;">
-                    <div class="card-header">
-                        <i class="fas fa-info-circle"></i>
-                        <h3>Decoded Barcode Information</h3>
+            <div id="decode-result-container">
+                @if (session('decodedData'))
+                    <div class="barcode-preview" style="margin-top: 32px;">
+                        <div class="card-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h3>Decoded Barcode Information</h3>
+                        </div>
+                        @if (session('decodedData')['is_valid'])
+                            <div class="decoded-info" style="padding: 28px 24px 20px 24px;">
+                                <div class="decoded-grid" style="grid-template-columns: 1fr 1fr;">
+                                    <!-- Row 1: Item (variant) -->
+                                    <div style="grid-column: 1 / span 2;">
+                                        <div class="decoded-label">Item Variant</div>
+                                        <div style="font-weight: 600; color: var(--primary); font-size: 15px;">
+                                            {{ session('decodedData')['variant']->nama_variant ?? 'Not found' }}
+                                        </div>
+                                    </div>
+                                    <!-- Row 2: Original Barcode | Buyer -->
+                                    <div>
+                                        <div class="decoded-label">Original Barcode</div>
+                                        <div class="barcode-text" style="font-size: 15px; color: var(--text); margin-top: 2px;">
+                                            {{ session('decodedData')['original_barcode'] }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="decoded-label">Buyer</div>
+                                        <div style="font-size: 15px;">
+                                            {{ session('decodedData')['buyer']->nama_buyer ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <!-- Row 3: Order | Container -->
+                                    <div>
+                                        <div class="decoded-label">Order</div>
+                                        <div style="font-size: 15px;">
+                                            <span style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
+                                            @if (session('decodedData')['pesanan']->nomor_pesanan)
+                                                <span style="color: var(--text-light); margin-left: 8px;">
+                                                    {{ session('decodedData')['pesanan']->nomor_pesanan }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="decoded-label">Container Number</div>
+                                        <div style="font-family: monospace; font-weight: 600; font-size: 15px;">
+                                            {{ session('decodedData')['container_number'] }}
+                                        </div>
+                                    </div>
+                                    <!-- Row 4: Supplier Code (full width) -->
+                                    <div style="grid-column: 1 / span 2;">
+                                        <div class="decoded-label">Production Line Code</div>
+                                        <div style="font-family: monospace; font-size: 15px;">
+                                            {{ session('decodedData')['supplier_code'] }}
+                                            @if (session('decodedData')['supplier'])
+                                                <span style="color: var(--text-light); margin-left: 8px;">
+                                                    ({{ session('decodedData')['supplier']->nama_supplier }})
+                                                </span>
+                                            @else
+                                                <span style="color: var(--error); margin-left: 8px;">
+                                                    (Production Line not found)
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div style="padding: 28px 24px;">
+                                <div class="error-message"
+                                    style="display: flex; align-items: flex-start; background: #fef2f2; border-left: 4px solid var(--error); border-radius: 6px; padding: 16px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" style="color: var(--error); margin-right: 12px;"
+                                        viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--error); font-size: 16px;">Invalid
+                                            Barcode</div>
+                                        <div style="color: var(--error); font-size: 14px; margin-top: 4px;">
+                                            {{ session('decodedData')['error'] ?? 'Could not decode barcode' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
-                    @if (session('decodedData')['is_valid'])
-                        <div class="decoded-info" style="padding: 28px 24px 20px 24px;">
-                            <div class="decoded-grid" style="grid-template-columns: 1fr 1fr;">
-                                <!-- Row 1: Item (variant) -->
-                                <div style="grid-column: 1 / span 2;">
-                                    <div class="decoded-label">Item Variant</div>
-                                    <div style="font-weight: 600; color: var(--primary); font-size: 15px;">
-                                        {{ session('decodedData')['variant']->nama_variant ?? 'Not found' }}
-                                    </div>
-                                </div>
-                                <!-- Row 2: Original Barcode | Buyer -->
-                                <div>
-                                    <div class="decoded-label">Original Barcode</div>
-                                    <div class="barcode-text" style="font-size: 15px; color: var(--text); margin-top: 2px;">
-                                        {{ session('decodedData')['original_barcode'] }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="decoded-label">Buyer</div>
-                                    <div style="font-size: 15px;">
-                                        {{ session('decodedData')['buyer']->nama_buyer ?? '-' }}
-                                    </div>
-                                </div>
-                                <!-- Row 3: Order | Container -->
-                                <div>
-                                    <div class="decoded-label">Order</div>
-                                    <div style="font-size: 15px;">
-                                        <span style="font-weight: 600;">#{{ session('decodedData')['order_sequence'] }}</span>
-                                        @if (session('decodedData')['pesanan']->nomor_pesanan)
-                                            <span style="color: var(--text-light); margin-left: 8px;">
-                                                {{ session('decodedData')['pesanan']->nomor_pesanan }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="decoded-label">Container Number</div>
-                                    <div style="font-family: monospace; font-weight: 600; font-size: 15px;">
-                                        {{ session('decodedData')['container_number'] }}
-                                    </div>
-                                </div>
-                                <!-- Row 4: Supplier Code (full width) -->
-                                <div style="grid-column: 1 / span 2;">
-                                    <div class="decoded-label">Production Line Code</div>
-                                    <div style="font-family: monospace; font-size: 15px;">
-                                        {{ session('decodedData')['supplier_code'] }}
-                                        @if (session('decodedData')['supplier'])
-                                            <span style="color: var(--text-light); margin-left: 8px;">
-                                                ({{ session('decodedData')['supplier']->nama_supplier }})
-                                            </span>
-                                        @else
-                                            <span style="color: var(--error); margin-left: 8px;">
-                                                (Production Line not found)
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <div style="padding: 28px 24px;">
-                            <div class="error-message"
-                                style="display: flex; align-items: flex-start; background: #fef2f2; border-left: 4px solid var(--error); border-radius: 6px; padding: 16px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" style="color: var(--error); margin-right: 12px;"
-                                    viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                </svg>
-                                <div>
-                                    <div style="font-weight: 600; color: var(--error); font-size: 16px;">Invalid
-                                        Barcode</div>
-                                    <div style="color: var(--error); font-size: 14px; margin-top: 4px;">
-                                        {{ session('decodedData')['error'] ?? 'Could not decode barcode' }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
 
     <script>
         function printBarcode() {
-            const barcodeText = "{{ session('barcodeText') ?? '' }}";
+            const barcodeText = document.getElementById("barcode-text")?.innerText.trim();
+
             if (!barcodeText) {
                 showAlert('error', 'No barcode available to print');
                 return;
@@ -809,296 +817,542 @@
             printWindow.document.close();
         }
 
-        function copyBarcodeText() {
-            const barcodeText = "{{ session('barcodeText') ?? '' }}";
-            if (!barcodeText) {
-                showAlert('error', 'No barcode available to copy');
-                return;
-            }
+        // Fungsi untuk menangani submit form dengan AJAX
+        function handleGenerateFormSubmit(e) {
+            e.preventDefault();
 
-            // Use the modern Clipboard API if available
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(barcodeText).then(() => {
-                    const btn = document.getElementById('copy-barcode-btn');
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                    btn.style.backgroundColor = 'var(--success)';
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.backgroundColor = 'var(--primary)';
-                    }, 2000);
-                }).catch(err => {
-                    showAlert('error', 'Failed to copy: ' + err);
-                });
-            } else {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = barcodeText;
-                textarea.style.position = 'fixed';
-                document.body.appendChild(textarea);
-                textarea.select();
-
-                try {
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        const btn = document.getElementById('copy-barcode-btn');
-                        const originalText = btn.innerHTML;
-                        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                        btn.style.backgroundColor = 'var(--success)';
-                        setTimeout(() => {
-                            btn.innerHTML = originalText;
-                            btn.style.backgroundColor = 'var(--primary)';
-                        }, 2000);
-                    } else {
-                        showAlert('error', 'Failed to copy barcode text');
-                    }
-                } catch (err) {
-                    showAlert('error', 'Error copying barcode text: ' + err);
-                } finally {
-                    document.body.removeChild(textarea);
-                }
-            }
-        }
-
-        function generateNewBarcode() {
-            // Reset the form and scroll to top
-            document.getElementById('generate-form').reset();
-            document.getElementById('pesanan_id').innerHTML = '<option value="">-- Select Order --</option>';
-            document.getElementById('item_variant_id').innerHTML = '<option value="">-- Select Item Variant --</option>';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function showAlert(type, message) {
-            // Create alert element
-            const alert = document.createElement('div');
-            alert.style.position = 'fixed';
-            alert.style.top = '20px';
-            alert.style.right = '20px';
-            alert.style.padding = '16px';
-            alert.style.borderRadius = '8px';
-            alert.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-            alert.style.color = 'white';
-            alert.style.display = 'flex';
-            alert.style.alignItems = 'center';
-            alert.style.gap = '10px';
-            alert.style.zIndex = '1000';
-            alert.style.transition = 'all 0.3s ease';
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-20px)';
-
-            if (type === 'error') {
-                alert.style.backgroundColor = 'var(--error)';
-                alert.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-            } else {
-                alert.style.backgroundColor = 'var(--success)';
-                alert.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-            }
-
-            document.body.appendChild(alert);
-
-            // Animate in
-            setTimeout(() => {
-                alert.style.opacity = '1';
-                alert.style.transform = 'translateY(0)';
-            }, 10);
-
-            // Animate out after 3 seconds
-            setTimeout(() => {
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateY(-20px)';
-                setTimeout(() => {
-                    document.body.removeChild(alert);
-                }, 300);
-            }, 3000);
-        }
-
-        function startBarcodeScanner() {
-            // This is a placeholder for actual barcode scanner integration
-            // In a real implementation, this would interface with a barcode scanner API
-            showAlert('info', 'Barcode scanner activated. Scan a barcode now.');
-            document.getElementById('barcode_input').focus();
-        }
-
-        function focusAndOpenKeyboard(elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.focus();
-                // For mobile devices, we need to ensure the virtual keyboard opens
-                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                    setTimeout(() => {
-                        element.click();
-                    }, 100);
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const buyerSelect = document.getElementById('buyer_id');
-            const pesananSelect = document.getElementById('pesanan_id');
-            const itemVariantSelect = document.getElementById('item_variant_id');
-            const pesananLoading = document.getElementById('pesanan-loading');
-            const variantLoading = document.getElementById('variant-loading');
+            // Validasi form
+            let isValid = true;
             const supplierCode = document.getElementById('supplier_code');
             const containerNumber = document.getElementById('nomor_container');
             const supplierError = document.getElementById('supplier-error');
             const containerError = document.getElementById('container-error');
-            const generateBtn = document.getElementById('generate-btn');
-            const nomorPesananHidden = document.getElementById('nomor_pesanan_hidden');
-            const generateForm = document.getElementById('generate-form');
-            const decodeForm = document.getElementById('decode-form');
 
-            // Form validation
-            supplierCode.addEventListener('input', function() {
-                const value = this.value.toUpperCase();
-                this.value = value;
+            // Validate supplier code
+            if (!/^[A-Za-z]$/.test(supplierCode.value)) {
+                supplierError.style.display = 'flex';
+                supplierCode.classList.add('shake');
+                isValid = false;
+            } else {
+                supplierError.style.display = 'none';
+                supplierCode.classList.remove('shake');
+            }
 
-                if (value && !/^[A-Z]$/.test(value)) {
-                    supplierError.style.display = 'flex';
-                } else {
-                    supplierError.style.display = 'none';
-                }
-            });
+            // Validate container number
+            if (containerNumber.value.length !== 3) {
+                containerError.style.display = 'flex';
+                containerNumber.classList.add('shake');
+                isValid = false;
+            } else {
+                containerError.style.display = 'none';
+                containerNumber.classList.remove('shake');
+            }
 
-            containerNumber.addEventListener('input', function() {
-                if (this.value.length > 0 && this.value.length !== 3) {
-                    containerError.style.display = 'flex';
-                } else {
-                    containerError.style.display = 'none';
-                }
-            });
-
-            // Dynamic dropdown loading
-            buyerSelect.addEventListener('change', function() {
-                const buyerId = this.value;
-                if (!buyerId) {
-                    pesananSelect.innerHTML = '<option value="">-- Select Order --</option>';
-                    itemVariantSelect.innerHTML = '<option value="">-- Select Item Variant --</option>';
-                    return;
-                }
-
-                pesananSelect.innerHTML = '<option value="">Loading...</option>';
-                pesananSelect.disabled = true;
-                pesananLoading.style.display = 'flex';
-
-                fetch(`/barcode/pesanan/${buyerId}`)
-                    .then(res => {
-                        if (!res.ok) throw new Error('Failed to load orders');
-                        return res.json();
-                    })
-                    .then(data => {
-                        let options = '<option value="">-- Select Order --</option>';
-                        data.forEach(p => {
-                            options += `<option value="${p.id}" data-nomor="${p.nomor_pesanan}">${p.nomor_pesanan}</option>`;
-                        });
-                        pesananSelect.innerHTML = options;
-                        pesananSelect.disabled = false;
-                    })
-                    .catch(error => {
-                        pesananSelect.innerHTML = '<option value="">Error loading orders</option>';
-                        console.error('Error:', error);
-                    })
-                    .finally(() => {
-                        pesananLoading.style.display = 'none';
-                    });
-            });
-
-            pesananSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const nomorPesanan = selectedOption.text;
-
-                // Set hidden field with nomor_pesanan
-                nomorPesananHidden.value = nomorPesanan;
-
-                if (!selectedOption.value) {
-                    itemVariantSelect.innerHTML = '<option value="">-- Select Item Variant --</option>';
-                    return;
-                }
-
-                itemVariantSelect.innerHTML = '<option value="">Loading...</option>';
-                itemVariantSelect.disabled = true;
-                variantLoading.style.display = 'flex';
-
-                // Send the order ID (value) instead of the order number (text)
-                fetch(`/barcode/item-variant/${this.value}`)
-                    .then(res => {
-                        if (!res.ok) throw new Error('Failed to load variants');
-                        return res.json();
-                    })
-                    .then(data => {
-                        let options = '<option value="">-- Select Item Variant --</option>';
-                        data.forEach(v => {
-                            options += `<option value="${v.id}">${v.nama_variant}</option>`;
-                        });
-                        itemVariantSelect.innerHTML = options;
-                        itemVariantSelect.disabled = false;
-                    })
-                    .catch(error => {
-                        itemVariantSelect.innerHTML = '<option value="">Error loading variants</option>';
-                        console.error('Error:', error);
-                    })
-                    .finally(() => {
-                        variantLoading.style.display = 'none';
-                    });
-            });
-
-            // Form submission validation
-            generateForm.addEventListener('submit', function(e) {
-                let isValid = true;
-
-                // Validate supplier code
-                if (!/^[A-Za-z]$/.test(supplierCode.value)) {
-                    supplierError.style.display = 'flex';
-                    supplierCode.classList.add('shake');
-                    isValid = false;
-                } else {
-                    supplierError.style.display = 'none';
+            if (!isValid) {
+                setTimeout(() => {
                     supplierCode.classList.remove('shake');
-                }
-
-                // Validate container number
-                if (containerNumber.value.length !== 3) {
-                    containerError.style.display = 'flex';
-                    containerNumber.classList.add('shake');
-                    isValid = false;
-                } else {
-                    containerError.style.display = 'none';
                     containerNumber.classList.remove('shake');
-                }
+                }, 500);
+                return;
+            }
 
-                if (!isValid) {
-                    e.preventDefault();
+            // Tampilkan loading state
+            const generateBtn = document.getElementById('generate-btn');
+            const originalBtnText = generateBtn.innerHTML;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            generateBtn.disabled = true;
+
+            // Kirim data form dengan AJAX
+            const formData = new FormData(document.getElementById('generate-form'));
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            fetch("{{ route('barcode.generate') }}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken.getAttribute('content') })
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update barcode preview
+                    updateBarcodePreview(data.barcodeText);
+
+                    // Scroll ke barcode
+                    const barcodePreview = document.getElementById('barcode-preview-container');
+                    barcodePreview.scrollIntoView({ behavior: 'smooth' });
+
+                    // Hapus error jika ada
+                    document.getElementById('error-container').innerHTML = '';
+                } else {
+                    // Tampilkan error
+                    showErrors(data.errors);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Terjadi kesalahan saat menggenerate barcode');
+            })
+            .finally(() => {
+                // Kembalikan state button
+                generateBtn.innerHTML = originalBtnText;
+                generateBtn.disabled = false;
+            });
+        }
+
+        // Fungsi untuk update tampilan barcode
+        function updateBarcodePreview(barcodeText) {
+            const barcodePreviewContainer = document.getElementById('barcode-preview-container');
+
+            barcodePreviewContainer.innerHTML = `
+                <div class="barcode-preview" id="print-area">
+                    <div class="barcode-container">
+                        <div class="barcode-text" id="barcode-text  ">${barcodeText}</div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-success" onclick="printBarcode()">
+                            <i class="fas fa-print"></i> Print Barcode
+                        </button>
+                        <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
+                            <i class="far fa-copy"></i> Copy Text
+                        </button>
+                        <button class="btn btn-warning" onclick="generateNewBarcode()">
+                            <i class="fas fa-sync-alt"></i> New Barcode
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fungsi untuk menampilkan error
+        function showErrors(errors) {
+            let errorHtml = '<div class="error-list"><ul>';
+
+            for (const field in errors) {
+                if (errors.hasOwnProperty(field)) {
+                    errors[field].forEach(error => {
+                        errorHtml += `<li>${error}</li>`;
+                    });
+                }
+            }
+
+            errorHtml += '</ul></div>';
+            document.getElementById('error-container').innerHTML = errorHtml;
+        }
+
+        // Fungsi untuk menangani submit form decode dengan AJAX
+        function handleDecodeFormSubmit(e) {
+            e.preventDefault();
+
+            const decodeBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnText = decodeBtn.innerHTML;
+            decodeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Decoding...';
+            decodeBtn.disabled = true;
+
+            const formData = new FormData(document.getElementById('decode-form'));
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            fetch("{{ route('barcode.decode') }}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken.getAttribute('content') })
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update decode result
+                    updateDecodeResult(data.data);
+                } else {
+                    // Tampilkan error
+                    showDecodeError(data.error || 'Gagal mendecode barcode');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Terjadi kesalahan saat mendecode barcode');
+            })
+            .finally(() => {
+                // Kembalikan state button
+                decodeBtn.innerHTML = originalBtnText;
+                decodeBtn.disabled = false;
+            });
+        }
+
+        // Fungsi untuk update hasil decode
+        function updateDecodeResult(decodedData) {
+            const decodeResultContainer = document.getElementById('decode-result-container');
+
+            if (decodedData.is_valid) {
+                decodeResultContainer.innerHTML = `
+                    <div class="barcode-preview" style="margin-top: 32px;">
+                        <div class="card-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h3>Decoded Barcode Information</h3>
+                        </div>
+                        <div class="decoded-info" style="padding: 28px 24px 20px 24px;">
+                            <div class="decoded-grid" style="grid-template-columns: 1fr 1fr;">
+                                <div style="grid-column: 1 / span 2;">
+                                    <div class="decoded-label">Item Variant</div>
+                                    <div style="font-weight: 600; color: var(--primary); font-size: 15px;">
+                                        ${decodedData.variant ? decodedData.variant.nama_variant : 'Not found'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="decoded-label">Original Barcode</div>
+                                    <div class="barcode-text" style="font-size: 15px; color: var(--text); margin-top: 2px;">
+                                        ${decodedData.original_barcode}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="decoded-label">Buyer</div>
+                                    <div style="font-size: 15px;">
+                                        ${decodedData.buyer ? decodedData.buyer.nama_buyer : '-'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="decoded-label">Order</div>
+                                    <div style="font-size: 15px;">
+                                        <span style="font-weight: 600;">#${decodedData.order_sequence}</span>
+                                        ${decodedData.pesanan && decodedData.pesanan.nomor_pesanan ?
+                                            `<span style="color: var(--text-light); margin-left: 8px;">
+                                                ${decodedData.pesanan.nomor_pesanan}
+                                            </span>` : ''}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="decoded-label">Container Number</div>
+                                    <div style="font-family: monospace; font-weight: 600; font-size: 15px;">
+                                        ${decodedData.container_number}
+                                    </div>
+                                </div>
+                                <div style="grid-column: 1 / span 2;">
+                                    <div class="decoded-label">Production Line Code</div>
+                                    <div style="font-family: monospace; font-size: 15px;">
+                                        ${decodedData.supplier_code}
+                                        ${decodedData.supplier ?
+                                            `<span style="color: var(--text-light); margin-left: 8px;">
+                                                (${decodedData.supplier.nama_supplier})
+                                            </span>` :
+                                            `<span style="color: var(--error); margin-left: 8px;">
+                                                (Production Line not found)
+                                            </span>`}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                decodeResultContainer.innerHTML = `
+                    <div class="barcode-preview" style="margin-top: 32px;">
+                                            <div style="padding: 28px 24px;">
+                        <div class="error-message"
+                            style="display: flex; align-items: flex-start; background: #fef2f2; border-left: 4px solid var(--error); border-radius: 6px; padding: 16px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" style="color: var(--error); margin-right: 12px;"
+                                viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <div>
+                                <div style="font-weight: 600; color: var(--error); font-size: 16px;">Invalid
+                                    Barcode</div>
+                                <div style="color: var(--error); font-size: 14px; margin-top: 4px;">
+                                    ${decodedData.error || 'Could not decode barcode'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }
+
+            // Scroll ke hasil decode
+            decodeResultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Fungsi untuk menampilkan error pada decode
+        function showDecodeError(errorMessage) {
+            const decodeResultContainer = document.getElementById('decode-result-container');
+
+            decodeResultContainer.innerHTML = `
+                <div class="barcode-preview" style="margin-top: 32px;">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Decoded Barcode Information</h3>
+                    </div>
+                    <div style="padding: 28px 24px;">
+                        <div class="error-message"
+                            style="display: flex; align-items: flex-start; background: #fef2f2; border-left: 4px solid var(--error); border-radius: 6px; padding: 16px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" style="color: var(--error); margin-right: 12px;"
+                                viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <div>
+                                <div style="font-weight: 600; color: var(--error); font-size: 16px;">Error</div>
+                                <div style="color: var(--error); font-size: 14px; margin-top: 4px;">
+                                    ${errorMessage}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Scroll ke hasil decode
+            decodeResultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Fungsi untuk menampilkan alert
+        function showAlert(type, message) {
+            // Buat elemen alert
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 16px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                max-width: 350px;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            if (type === 'success') {
+                alertDiv.style.backgroundColor = 'var(--success)';
+            } else if (type === 'error') {
+                alertDiv.style.backgroundColor = 'var(--error)';
+            }
+
+            alertDiv.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            // Hapus alert setelah 3 detik
+            setTimeout(() => {
+                alertDiv.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    document.body.removeChild(alertDiv);
+                }, 300);
+            }, 3000);
+        }
+
+        // Fungsi untuk copy teks barcode
+        function copyBarcodeText() {
+            const barcodeText = document.querySelector('.barcode-text').textContent;
+
+            navigator.clipboard.writeText(barcodeText)
+                .then(() => {
+                    // Ubah tampilan button
+                    const copyBtn = document.getElementById('copy-barcode-btn');
+                    const originalHtml = copyBtn.innerHTML;
+
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    copyBtn.style.backgroundColor = 'var(--success)';
+
                     setTimeout(() => {
-                        supplierCode.classList.remove('shake');
-                        containerNumber.classList.remove('shake');
-                    }, 500);
+                        copyBtn.innerHTML = originalHtml;
+                        copyBtn.style.backgroundColor = '';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    showAlert('error', 'Gagal menyalin teks');
+                });
+        }
+
+        // Fungsi untuk generate barcode baru
+        function generateNewBarcode() {
+            document.getElementById('barcode-preview-container').innerHTML = '';
+        }
+
+        // Fungsi untuk memuat pesanan berdasarkan buyer
+        function loadOrders(buyerId) {
+            if (!buyerId) {
+                document.getElementById('pesanan_id').innerHTML = '<option value="">-- Select Order --</option>';
+                return;
+            }
+
+            // Tampilkan loading
+            document.getElementById('pesanan-loading').style.display = 'flex';
+
+            fetch(`/barcode/pesanan/${buyerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const selectElement = document.getElementById('pesanan_id');
+                    selectElement.innerHTML = '<option value="">-- Select Order --</option>';
+
+                    data.forEach(order => {
+                        const option = document.createElement('option');
+                        option.value = order.id;
+                        option.textContent = order.nomor_pesanan || `Order #${order.id}`;
+                        selectElement.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading orders:', error);
+                    showAlert('error', 'Gagal memuat data pesanan');
+                })
+                .finally(() => {
+                    document.getElementById('pesanan-loading').style.display = 'none';
+                });
+        }
+
+        // Fungsi untuk memuat variant berdasarkan pesanan
+        function loadVariants(pesananId) {
+            if (!pesananId) {
+                document.getElementById('item_variant_id').innerHTML = '<option value="">-- Select Item Variant --</option>';
+                return;
+            }
+
+            // Tampilkan loading
+            document.getElementById('variant-loading').style.display = 'flex';
+
+            fetch(`/barcode/item-variant/${pesananId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const selectElement = document.getElementById('item_variant_id');
+                    selectElement.innerHTML = '<option value="">-- Select Item Variant --</option>';
+
+                    data.forEach(variant => {
+                        const option = document.createElement('option');
+                        option.value = variant.id;
+                        option.textContent = variant.nama_variant;
+                        selectElement.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading variants:', error);
+                    showAlert('error', 'Gagal memuat data variant');
+                })
+                .finally(() => {
+                    document.getElementById('variant-loading').style.display = 'none';
+                });
+        }
+
+        // Fungsi untuk memulai scanner barcode (simulasi)
+        function startBarcodeScanner() {
+            showAlert('info', 'Fitur scanner akan datang. Silakan masukkan kode barcode secara manual.');
+        }
+
+        // Fungsi untuk fokus dan membuka keyboard di perangkat mobile
+        function focusAndOpenKeyboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.focus();
+
+            // Untuk perangkat mobile, perlu sedikit delay
+            setTimeout(() => {
+                element.focus();
+            }, 100);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener untuk form generate
+            document.getElementById('generate-form').addEventListener('submit', handleGenerateFormSubmit);
+
+            // Event listener untuk form decode
+            document.getElementById('decode-form').addEventListener('submit', handleDecodeFormSubmit);
+
+            // Event listener untuk perubahan buyer
+            document.getElementById('buyer_id').addEventListener('change', function() {
+                loadOrders(this.value);
+                // Reset variant ketika buyer berubah
+                document.getElementById('item_variant_id').innerHTML = '<option value="">-- Select Item Variant --</option>';
+            });
+
+            // Event listener untuk perubahan pesanan
+            document.getElementById('pesanan_id').addEventListener('change', function() {
+                loadVariants(this.value);
+
+                // Set nomor pesanan ke hidden field
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.textContent) {
+                    document.getElementById('nomor_pesanan_hidden').value = selectedOption.textContent;
                 }
             });
 
-            // Auto-uppercase for supplier code
-            supplierCode.addEventListener('input', function() {
+            // Validasi real-time untuk supplier code
+            document.getElementById('supplier_code').addEventListener('input', function() {
                 this.value = this.value.toUpperCase();
+
+                if (/^[A-Za-z]$/.test(this.value)) {
+                    document.getElementById('supplier-error').style.display = 'none';
+                    this.classList.remove('shake');
+                }
             });
 
-            // Auto-uppercase for container number
-            containerNumber.addEventListener('input', function() {
-                this.value = this.value.toUpperCase();
+            // Validasi real-time untuk container number
+            document.getElementById('nomor_container').addEventListener('input', function() {
+                if (this.value.length === 3) {
+                    document.getElementById('container-error').style.display = 'none';
+                    this.classList.remove('shake');
+                }
             });
 
-            // Focus barcode input on decode form load if there's no data
-            @if (!session('decodedData'))
-                document.getElementById('barcode_input').focus();
+            // Load data awal jika ada nilai sebelumnya
+            @if (old('buyer_id'))
+                loadOrders({{ old('buyer_id') }});
             @endif
 
-            // If there's a barcode to print (from session), scroll to it
-            @if (session('barcodeText'))
+            @if (old('pesanan_id'))
                 setTimeout(() => {
-                    const barcodePreview = document.querySelector('.barcode-preview');
-                    if (barcodePreview) {
-                        barcodePreview.scrollIntoView({ behavior: 'smooth' });
-                    }
-                }, 300);
+                    document.getElementById('pesanan_id').value = "{{ old('pesanan_id') }}";
+                    loadVariants("{{ old('pesanan_id') }}");
+                }, 500);
+            @endif
+
+            @if (old('item_variant_id'))
+                setTimeout(() => {
+                    document.getElementById('item_variant_id').value = "{{ old('item_variant_id') }}";
+                }, 1000);
             @endif
         });
+
+        // Tambahkan keyframe untuk animasi slideIn dan slideOut
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
+
 </html>
