@@ -182,11 +182,12 @@ class BarcodeController extends Controller
             ->orderBy('created_at')
             ->get()
             ->map(function ($order) {
-                // Ensure consistent format
-                if (!str_contains($order->nomor_pesanan, '#')) {
-                    $order->nomor_pesanan = 'PO#' . $order->nomor_pesanan;
-                }
-                return $order;
+                return [
+                    'id' => $order->id,
+                    'nomor_pesanan' => str_contains($order->nomor_pesanan, '#')
+                        ? $order->nomor_pesanan
+                        : 'PO#' . $order->nomor_pesanan,
+                ];
             });
 
         return response()->json($orders);
@@ -194,20 +195,24 @@ class BarcodeController extends Controller
 
     public function getItemVariant($pesananId)
     {
-        // Find the order by ID
         $pesanan = PesananPenjualan::find($pesananId);
 
         if (!$pesanan) {
             return response()->json([]);
         }
 
-        // Get all item variants for this order
-        $variants = DetailPesananPenjualan::with('ItemVariant')
+        $variants = DetailPesananPenjualan::with('ItemVariant:id,nama_variant')
             ->where('pesanan_penjualan_id', $pesanan->id)
             ->get()
             ->pluck('ItemVariant')
             ->unique('id')
-            ->values();
+            ->values()
+            ->map(function ($variant) {
+                return [
+                    'id' => $variant->id,
+                    'nama_variant' => $variant->nama_variant,
+                ];
+            });
 
         return response()->json($variants);
     }
