@@ -217,7 +217,6 @@ class BarcodeController extends Controller
                 'supplier' => [
                     'id' => $supplier->id,
                     'nama_supplier' => $supplier->nama_supplier,
-                    'kode_supplier' => $supplier->kode_supplier,
                 ],
                 'order_sequence' => $pesananCode,
                 'supplier_code' => $supplierCode,
@@ -263,7 +262,7 @@ class BarcodeController extends Controller
             'success' => false,
             'message' => $decodedData['error'],
             'data' => $decodedData
-        ], 422);
+        ], 200);
     }
 
     public function getPesanan($buyerId)

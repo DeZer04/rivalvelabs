@@ -967,24 +967,27 @@
                     ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken.getAttribute('content') })
                 }
             })
-            .then(response => {
+            .then(async response => {
+                const data = await response.json();
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    // Kalau status 422, ambil pesan dari Laravel
+                    throw new Error(data.message || (data.errors ? JSON.stringify(data.errors) : 'Network response was not ok'));
                 }
-                return response.json();
+                return data;
             })
             .then(data => {
                 if (data.success) {
-                    // Update decode result
                     updateDecodeResult(data.data);
                 } else {
-                    // Tampilkan error
-                    showDecodeError(data.error || 'Gagal mendecode barcode');
+                    const errorMessage = data.message
+                        || (data.data && data.data.error)
+                        || 'Gagal mendecode barcode';
+                    showDecodeError(errorMessage);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('error', 'Terjadi kesalahan saat mendecode barcode');
+                showDecodeError(error.message || 'Terjadi kesalahan saat mendecode barcode');
             })
             .finally(() => {
                 // Kembalikan state button
