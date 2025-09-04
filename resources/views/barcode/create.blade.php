@@ -914,7 +914,7 @@
             barcodePreviewContainer.innerHTML = `
                 <div class="barcode-preview" id="print-area">
                     <div class="barcode-container">
-                        <div class="barcode-text" id="barcode-text  ">${barcodeText}</div>
+                        <div class="barcode-text" id="barcode-text">${barcodeText}</div>
                     </div>
                     <div class="actions">
                         <button class="btn btn-success" onclick="printBarcode()">
