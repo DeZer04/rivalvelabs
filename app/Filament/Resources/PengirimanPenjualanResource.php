@@ -28,38 +28,40 @@ class PengirimanPenjualanResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+   public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Section::make('Pengiriman Penjualan')
+                Section::make('Informasi Pengiriman')
                     ->schema([
-                        Section::make('Informasi Pengiriman')
-                            ->schema([
-                                Select::make('buyer_id')
-                                    ->label('Buyer')
-                                    ->relationship('Buyer', 'nama_buyer')
-                                    ->required()
-                                    ->preload()
-                                    ->reactive(),
-                            ]),
-                        Select::make('pesanan_penjualan_id')
-                            ->label('Pesanan Penjualan')
-                            ->options(function (callable $get) {
-
-                            })
+                        Select::make('buyer_id')
+                            ->label('Buyer')
+                            ->relationship('buyer', 'nama_buyer')
                             ->required()
-                            ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->searchable(),
+
+                        Select::make('pesananPenjualans')
+                            ->label('Pesanan Penjualan')
+                            ->multiple() // Many-to-Many
+                            ->relationship('pesananPenjualans', 'nomor_pesanan')
+                            ->required()
+                            ->preload()
+                            ->searchable(),
+
                         TextInput::make('nomor_pengiriman')
                             ->label('Nomor Pengiriman')
+                            ->unique(ignoreRecord: true)
                             ->required()
                             ->maxLength(255),
+
                         DatePicker::make('tanggal_pengiriman')
                             ->label('Tanggal Pengiriman')
-                            ->required()
-                            ->default(now()),
-                    ]),
+                            ->default(now())
+                            ->required(),
+                    ])
+                    ->columns(2),
+
                 Section::make('Detail Pengiriman')
                     ->schema([
                         Repeater::make('DetailPengirimanPenjualan')
@@ -67,25 +69,25 @@ class PengirimanPenjualanResource extends Resource
                             ->schema([
                                 Select::make('item_id')
                                     ->label('Item')
-                                    ->relationship('Item', 'nama_item')
+                                    ->relationship('item', 'nama_item')
                                     ->required()
                                     ->searchable()
                                     ->preload(),
+
                                 Select::make('item_variant_id')
                                     ->label('Item Variant')
-                                    ->relationship('ItemVariant', 'nama_variant')
-                                    ->required()
+                                    ->relationship('itemVariant', 'nama_variant')
                                     ->searchable()
                                     ->preload(),
-                                TextInput::make('jumlah_order')
-                                    ->label('Jumlah Order')
-                                    ->required()
+
+                                TextInput::make('jumlah_item')
+                                    ->label('Jumlah Item')
                                     ->numeric()
+                                    ->required()
                                     ->minValue(1),
-                                TextInput::make('jumlah_kirim')
-                                    ->label('Jumlah Kirim')
                             ])
-                            ->columns(2),
+                            ->columns(3)
+                            ->defaultItems(1),
                     ]),
             ]);
     }
@@ -94,18 +96,38 @@ class PengirimanPenjualanResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('nomor_pengiriman')
+                    ->label('Nomor Pengiriman')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('buyer.nama_buyer')
+                    ->label('Buyer')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('pesananPenjualans.nomor_pesanan')
+                    ->label('Pesanan Terkait')
+                    ->badge()
+                    ->separator(', '),
+
+                Tables\Columns\TextColumn::make('tanggal_pengiriman')
+                    ->label('Tanggal Pengiriman')
+                    ->date('d M Y')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Dibuat')
+                    ->dateTime('d M Y H:i'),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 

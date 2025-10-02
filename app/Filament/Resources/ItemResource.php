@@ -23,6 +23,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use phpDocumentor\Reflection\DocBlock\Tags\See;
+use Illuminate\Support\Facades\Auth;
 
 class ItemResource extends Resource
 {
@@ -227,7 +228,10 @@ class ItemResource extends Resource
                                     ])
                                     ->required(),
 
-                                TextInput::make('harga')->numeric()->required(),
+                                TextInput::make('harga')
+                                    ->numeric()
+                                    ->required()
+                                    ->hidden(fn () => ! Auth::user()->hasAnyRole(['admin', 'Super Admin'])),
                             ]),
                         ])
                         ->columns(2)

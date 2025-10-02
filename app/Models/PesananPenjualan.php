@@ -35,9 +35,14 @@ class PesananPenjualan extends Model
         return $this->hasMany(DetailPesananPenjualan::class);
     }
 
-    public function PengirimanPenjualan()
+    public function pengirimanPenjualans()
     {
-        return $this->hasMany(PengirimanPenjualan::class);
+        return $this->belongsToMany(
+            PengirimanPenjualan::class,
+            'pengiriman_pesanan_penjualans',
+            'pesanan_penjualan_id',
+            'pengiriman_penjualan_id'
+        )->withTimestamps();
     }
 
     public function updateStatusPesanan()

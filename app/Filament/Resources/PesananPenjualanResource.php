@@ -201,7 +201,8 @@ class PesananPenjualanResource extends Resource
                                 ->label('Harga Satuan')
                                 ->numeric()
                                 ->required()
-                                ->readOnly(),
+                                ->readOnly()
+                                ->hidden(fn () => ! Auth::user()->hasRole('Admin', 'Super Admin')),
                             TextInput::make('diskon')
                                 ->label('Diskon')
                                 ->numeric()
@@ -211,13 +212,15 @@ class PesananPenjualanResource extends Resource
                                     $jumlah = $get('jumlah_item') ?? 0;
                                     $diskon = $get('diskon') ?? 0;
                                     $set('total_harga', ($harga * $jumlah) - $diskon);
-                                }),
+                                })
+                                ->hidden(fn () => ! Auth::user()->hasRole('Admin', 'Super Admin')),
                             TextInput::make('total_harga')
                                 ->label('Total Harga')
                                 ->numeric()
                                 ->required()
                                 ->default(0)
-                                ->readOnly(),
+                                ->readOnly()
+                                ->hidden(fn () => ! Auth::user()->hasRole('Admin', 'Super Admin')),
                             TextInput::make('keterangan')
                                 ->label('Keterangan'),
                         ])

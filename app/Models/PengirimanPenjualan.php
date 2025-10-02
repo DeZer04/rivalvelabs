@@ -10,17 +10,30 @@ class PengirimanPenjualan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'pesanan_penjualan_id',
+        'buyer_id',
         'nomor_pengiriman',
         'tanggal_pengiriman',
     ];
 
-    public function PesananPenjualan()
+    // Relasi ke Buyer
+    public function buyer()
     {
-        return $this->belongsTo(PesananPenjualan::class);
+        return $this->belongsTo(Buyer::class);
     }
 
-    public function DetailPengirimanPenjualan()
+    // Relasi Many-to-Many ke PesananPenjualan
+    public function pesananPenjualans()
+    {
+        return $this->belongsToMany(
+            PesananPenjualan::class,
+            'pengiriman_pesanan_penjualans', // nama tabel pivot
+            'pengiriman_penjualan_id',
+            'pesanan_penjualan_id'
+        )->withTimestamps();
+    }
+
+    // Relasi One-to-Many ke DetailPengirimanPenjualan
+    public function detailPengirimanPenjualan()
     {
         return $this->hasMany(DetailPengirimanPenjualan::class);
     }
