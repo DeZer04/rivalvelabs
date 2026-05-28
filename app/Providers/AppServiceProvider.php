@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Activitylog\Models\Activity;
+use App\Models\Absensi;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        //
+        Absensi::observe(\App\Observers\AbsensiObserver::class);
     }
 
     public function boot(): void

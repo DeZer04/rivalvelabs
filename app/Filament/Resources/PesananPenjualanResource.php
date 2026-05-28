@@ -24,6 +24,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\Auth;
 
 class PesananPenjualanResource extends Resource
 {
@@ -198,11 +199,11 @@ class PesananPenjualanResource extends Resource
                                 }),
                             TextInput::make('jumlah_item_dikirim')->numeric()->default(0)->readOnly(),
                             TextInput::make('harga_satuan')
+                                ->default(0)
                                 ->label('Harga Satuan')
                                 ->numeric()
                                 ->required()
-                                ->readOnly()
-                                ->hidden(fn () => ! Auth::user()->hasRole('Admin', 'Super Admin')),
+                                ->readOnly(),
                             TextInput::make('diskon')
                                 ->label('Diskon')
                                 ->numeric()
@@ -212,15 +213,13 @@ class PesananPenjualanResource extends Resource
                                     $jumlah = $get('jumlah_item') ?? 0;
                                     $diskon = $get('diskon') ?? 0;
                                     $set('total_harga', ($harga * $jumlah) - $diskon);
-                                })
-                                ->hidden(fn () => ! Auth::user()->hasRole('Admin', 'Super Admin')),
+                                }),
                             TextInput::make('total_harga')
                                 ->label('Total Harga')
                                 ->numeric()
                                 ->required()
                                 ->default(0)
-                                ->readOnly()
-                                ->hidden(fn () => ! Auth::user()->hasRole('Admin', 'Super Admin')),
+                                ->readOnly(),
                             TextInput::make('keterangan')
                                 ->label('Keterangan'),
                         ])

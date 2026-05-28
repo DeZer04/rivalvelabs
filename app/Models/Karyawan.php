@@ -24,7 +24,23 @@ class Karyawan extends Model
         'foto',
         'jenis_kelamin',
         'tanggal_lahir',
+        'jam_kerja_group_id',
     ];
+
+    public function jamKerjaGroup()
+    {
+        return $this->belongsTo(JamKerjaGroup::class);
+    }
+
+    public function izinRequests()
+    {
+        return $this->hasMany(IzinRequest::class);
+    }
+
+    public function absensi()
+    {
+        return $this->hasMany(Absensi::class, 'nip', 'nik');
+    }
 
     public function divisi()
     {
@@ -35,4 +51,6 @@ class Karyawan extends Model
     {
         return $this->belongsTo(Jabatan::class);
     }
+
+    
 }

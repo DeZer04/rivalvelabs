@@ -14,6 +14,15 @@ use Filament\Tables\Actions\ImportAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Models\JamKerjaGroup;
+use Filament\Notifications\Notification;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\Select;
+use Illuminate\Database\Eloquent\Collection;
+
 
 class KaryawanResource extends Resource
 {
@@ -86,6 +95,7 @@ class KaryawanResource extends Resource
                     ->image()
                     ->directory('karyawan-foto')
                     ->maxSize(2048),
+
             ]);
     }
 

@@ -41,7 +41,7 @@ class BarcodeController extends Controller
         $pesananCode = str_pad($orderSequence, 3, '0', STR_PAD_LEFT);
         $kontainer = strtoupper($containerNumber);
 
-        return "S/N:{$kodeItem}{$buyerCode}{$pesananCode}{$supplier}{$kontainer}";
+        return "{$kodeItem}{$buyerCode}{$pesananCode}{$supplier}{$kontainer}";
     }
 
     public function generate(Request $request)
@@ -150,12 +150,15 @@ class BarcodeController extends Controller
     protected function decodeBarcode($barcode)
     {
         try {
+            // Remove "S/N:" prefix if present
+            if (strpos($barcode, 'S/N:') === 0) {
+                $barcode = substr($barcode, 4);
+            }
+
             // Validasi panjang barcode minimal
             if (strlen($barcode) < 13) {
                 throw new \Exception('Barcode terlalu pendek');
             }
-
-            // Decode barcode
             $variantId = (int) substr($barcode, 0, 4);    // 0001
             $buyerId = (int) substr($barcode, 4, 2);       // 05
             $pesananCode = substr($barcode, 6, 3);         // 001 → dicocokkan ke PO#001

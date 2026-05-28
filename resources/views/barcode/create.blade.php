@@ -238,12 +238,22 @@
         }
 
         .barcode-container {
-            display: inline-block;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
             padding: 16px;
             background-color: white;
             border-radius: var(--radius);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border);
+            text-align: center;
+            gap: 8px;
+        }
+
+        .barcode-container svg {
+            display: block;
+            margin: 0 auto;
+            background-color: white;
         }
 
         .barcode-text {
@@ -263,6 +273,7 @@
             display: flex;
             gap: 12px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .input-group {
@@ -467,6 +478,7 @@
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128+Text&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
 
 <body>
@@ -581,18 +593,24 @@
                 @if (session('barcodeText'))
                     <div class="barcode-preview" id="print-area">
                         <div class="barcode-container">
+                            <svg id="barcode-svg" style="margin-bottom: 8px;"></svg>
                             <div class="barcode-text" id="barcode-text"></div>
                         </div>
                         <div class="actions">
-                            <button class="btn btn-success" onclick="printBarcode()">
-                                <i class="fas fa-print"></i> Print Barcode
-                            </button>
-                            <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
-                                <i class="far fa-copy"></i> Copy Text
-                            </button>
-                            <button class="btn btn-warning" onclick="generateNewBarcode()">
-                                <i class="fas fa-sync-alt"></i> New Barcode
-                            </button>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-success" onclick="printBarcode('full')">
+                                    <i class="fas fa-barcode"></i> Print Barcode
+                                </button>
+                                <button class="btn btn-primary" onclick="printBarcode('serial')">
+                                    <i class="fas fa-file-alt"></i> Print Text Only
+                                </button>
+                                <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
+                                    <i class="far fa-copy"></i> Copy Text
+                                </button>
+                                <button class="btn btn-warning" onclick="generateNewBarcode()">
+                                    <i class="fas fa-sync-alt"></i> New Barcode
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -718,7 +736,7 @@
     </div>
 
     <script>
-        function printBarcode() {
+        function printBarcode(format = 'full') {
             const barcodeText = document.getElementById("barcode-text")?.innerText.trim();
 
             if (!barcodeText) {
@@ -726,83 +744,138 @@
                 return;
             }
 
-            const printWindow = window.open('', '', 'width=800,height=500');
+            const printWindow = window.open('', '', 'width=600,height=400');
 
-            // Ukuran dalam piksel untuk 5x2 cm pada 96 DPI
-            const labelWidth = 189; // 5 cm = 189 piksel
-            const labelHeight = 76; // 2 cm = 76 piksel
-            const margin = 5; // Margin kecil
-            const gap = 10; // Jarak antara dua barcode
+            if (format === 'full') {
+                // Cetak dengan barcode visual - 1 barcode per lembar (5x2cm)
+                printWindow.document.write(`
+                <html>
+                <head>
+                <meta charset="UTF-8">
+                <title>Print Barcode</title>
+                <style>
+                    @page {
+                        size: 5cm 2cm;
+                        margin: 0;
+                    }
+                    * {
+                        margin: 0;
+                        padding: 0;
+                    }
+                    body {
+                        background-color: white;
+                        width: 5cm;
+                        height: 2cm;
+                        padding: 2mm;
+                        box-sizing: border-box;
+                    }
+                    .label {
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 0;
+                    }
+                    svg {
+                        max-width: 95%;
+                        height: auto;
+                    }
+                </style>
+                </head>
+                <body>
+                    <div class="label">
+                        <svg id="barcode-print-svg"></svg>
+                    </div>
+                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+                    <script>
+                        setTimeout(() => {
+                            JsBarcode("#barcode-print-svg", "${barcodeText}", {
+                                format: "CODE128",
+                                width: 1.5,
+                                height: 50,
+                                margin: 3,
+                                displayValue: true
+                            });
+                            window.print();
+                            window.onafterprint = function() {
+                                window.close();
+                            };
+                        }, 300);
+                    <\/script>
+                </body>
+                </html>
+                `);
+            } else if (format === 'serial') {
+                // Cetak hanya teks - ukuran kertas 5x2cm
+                printWindow.document.write(`
+                <html>
+                <head>
+                <meta charset="UTF-8">
+                <title>Print Text</title>
+                <style>
+                    @page {
+                        size: 5cm 2cm;
+                        margin: 0;
+                    }
 
-            printWindow.document.write(`
-            <html>
-            <head>
-            <title>Print Barcode Text</title>
-            <style>
-                @page {
-                    size: ${labelWidth + margin*2}px ${(labelHeight * 2) + (gap) + (margin * 2)}px;
-                    margin: ${margin}px;
-                }
-                body {
-                    margin: 0;
-                    padding: 0;
-                    background-color: white;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    align-items: center;
-                    height: 100vh;
-                    position: relative;
-                }
-                .label {
-                    width: ${labelWidth}px;
-                    height: ${labelHeight}px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    box-sizing: border-box;
-                }
-                .barcode-text {
-                    font-family: 'Consolas', monospace;
-                    font-size: 16px;
-                    font-weight: bold;
-                    letter-spacing: 1.5px;
-                    text-align: center;
-                    padding: 5px;
-                    width: 100%;
-                }
-                .cut-line {
-                    position: absolute;
-                    left: ${margin}px;
-                    right: ${margin}px;
-                    top: 50%;
-                    height: 0;
-                    border-top: 1px dashed #000;
-                    pointer-events: none;
-                }
-                .cut-line::before,
-                .cut-line::after {
-                    position: absolute;
-                    top: -10px;
-                    font-size: 12px;
-                    color: #999;
-                }
-                .cut-line::before {
-                    left: 5px;
-                }
-                .cut-line::after {
-                    right: 5px;
-                }
-            </style>
-            </head>
-            <body>
-                <div class="label">
-                    <div class="barcode-text">${barcodeText}</div>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    body {
+                        background-color: white;
+                        width: 5cm;
+                        height: 2cm;
+                        padding: 0.5mm; /* lebih tipis */
+                        box-sizing: border-box;
+                    }
+
+                    .container {
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                    }
+
+                    .label {
+                        flex: 1;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+
+                    .separator {
+                        height: 0.2mm;
+                        background: black;
+                        width: 100%;
+                    }
+
+                    .barcode-text {
+                        font-family: 'Courier New', monospace;
+                        font-size: 12px;
+                        font-weight: bold;
+                        letter-spacing: 0.8px;
+                        text-align: center;
+                    }
+                </style>
+                </head>
+                <body>
+
+                <div class="container">
+                    <div class="label">
+                        <div class="barcode-text">${barcodeText}</div>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <div class="label">
+                        <div class="barcode-text">${barcodeText}</div>
+                    </div>
                 </div>
-                <div class="cut-line"></div>
-                <div class="label">
-                    <div class="barcode-text">${barcodeText}</div>
-                </div>
+
                 <script>
                     setTimeout(() => {
                         window.print();
@@ -811,9 +884,12 @@
                         };
                     }, 100);
                 <\/script>
-            </body>
-            </html>
-            `);
+
+                </body>
+                </html>
+                `);
+            }
+
             printWindow.document.close();
         }
 
@@ -914,21 +990,42 @@
             barcodePreviewContainer.innerHTML = `
                 <div class="barcode-preview" id="print-area">
                     <div class="barcode-container">
-                        <div class="barcode-text" id="barcode-text">${barcodeText}</div>
+                        <svg id="barcode-svg"></svg>
+                        <div class="barcode-text" id="barcode-text">S/N:${barcodeText}</div>
                     </div>
                     <div class="actions">
-                        <button class="btn btn-success" onclick="printBarcode()">
-                            <i class="fas fa-print"></i> Print Barcode
-                        </button>
-                        <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
-                            <i class="far fa-copy"></i> Copy Text
-                        </button>
-                        <button class="btn btn-warning" onclick="generateNewBarcode()">
-                            <i class="fas fa-sync-alt"></i> New Barcode
-                        </button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="printBarcode('full')">
+                                <i class="fas fa-barcode"></i> Print Barcode
+                            </button>
+                            <button class="btn btn-primary" onclick="printBarcode('serial')">
+                                <i class="fas fa-file-alt"></i> Print Text Only
+                            </button>
+                            <button class="btn btn-primary" id="copy-barcode-btn" onclick="copyBarcodeText()">
+                                <i class="far fa-copy"></i> Copy Text
+                            </button>
+                            <button class="btn btn-warning" onclick="generateNewBarcode()">
+                                <i class="fas fa-sync-alt"></i> New Barcode
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
+
+            // Generate barcode visual setelah element dibuat
+            setTimeout(() => {
+                try {
+                    JsBarcode("#barcode-svg", barcodeText, {
+                        format: "CODE128",
+                        width: 2,
+                        height: 60,
+                        margin: 10
+                    });
+                } catch (error) {
+                    console.error('Error generating barcode:', error);
+                    showAlert('error', 'Gagal membuat barcode visual');
+                }
+            }, 0);
         }
 
         // Fungsi untuk menampilkan error
@@ -1281,6 +1378,21 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
+            // Render barcode visual jika ada
+            const barcodeText = document.getElementById('barcode-text');
+            if (barcodeText && barcodeText.innerText.trim()) {
+                try {
+                    JsBarcode("#barcode-svg", barcodeText.innerText.trim(), {
+                        format: "CODE128",
+                        width: 2,
+                        height: 60,
+                        margin: 10
+                    });
+                } catch (error) {
+                    console.error('Error rendering barcode:', error);
+                }
+            }
+
             // Event listener untuk form generate
             document.getElementById('generate-form').addEventListener('submit', handleGenerateFormSubmit);
 
